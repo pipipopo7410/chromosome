@@ -1,0 +1,1141 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>生命的藍圖 - 條對套與減數分裂</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/Draggable.min.js"></script>
+    
+    <style>
+        body, html { 
+            margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidden; 
+            background-color: #ffffff; 
+            font-family: 'Segoe UI', Tahoma, sans-serif; 
+            color: #1e293b; display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+
+        .bg-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-size: contain; background-position: center center; background-repeat: no-repeat;
+            transition: background-image 1s ease-in-out;
+        }
+        #bg-layer-dim { background-image: url('01-2.png'); z-index: 1; }
+        #bg-layer-bright { background-image: url('01.png'); z-index: 2; }
+
+        .bg-half-right { 
+            position: absolute; right: 0; width: 50%; height: 100%; 
+            background-size: contain; background-position: center center; background-repeat: no-repeat;
+            z-index: 2; opacity: 0; 
+        }
+        #bg-female-02 { background-image: url('02.png'); z-index: 2; }
+        #bg-female-02-2 { background-image: url('02-2.png'); z-index: 1; }
+
+        #baby-fly-img {
+            position: absolute; top: 2%; left: 50%; transform: translateX(-50%) scale(0);
+            width: 350px; height: 350px; background-size: contain; background-repeat: no-repeat; background-position: center;
+            z-index: 10; display: none; filter: drop-shadow(0 10px 15px rgba(0,0,0,0.2));
+        }
+
+        #start-overlay {
+            position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(255,255,255,0.3); backdrop-filter: blur(2px);
+            z-index: 10000; display: flex; justify-content: center; align-items: center; flex-direction: column;
+        }
+        .start-btn {
+            background: #2563eb; color: white; border: none; padding: 20px 40px;
+            font-size: 2rem; font-weight: bold; border-radius: 50px; cursor: pointer;
+            box-shadow: 0 10px 20px rgba(37, 99, 235, 0.4); transition: transform 0.2s;
+        }
+        .start-btn:hover { transform: scale(1.05); }
+
+        #magnifying-glass {
+            position: absolute; width: 120px; height: 120px; border: 8px solid #475569; border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(1px) brightness(1.2);
+            box-shadow: 0 0 15px rgba(0,0,0,0.3), inset 0 0 20px rgba(255,255,255,0.6); z-index: 3; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0); display: none;
+        }
+        #magnifying-glass::after { content: ''; position: absolute; width: 14px; height: 70px; background: #475569; bottom: -55px; right: -30px; transform: rotate(-45deg); border-radius: 8px; box-shadow: 2px 2px 5px rgba(0,0,0,0.3); }
+
+        #center-message {
+            position: absolute; top: 12%; background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: white; padding: 15px 40px; border-radius: 12px; font-size: 1.5rem;
+            font-weight: bold; box-shadow: 0 10px 25px rgba(34, 197, 94, 0.4);
+            display: none; z-index: 9999; text-align: center; line-height: 1.5;
+        }
+
+        #score-board-s1 {
+            position: absolute; top: 5%; left: 3%; background: rgba(255,255,255,0.95);
+            color: #334155; padding: 20px 30px; border-radius: 16px; font-size: 1.4rem; font-weight: bold; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15); border: 2px solid #e2e8f0; 
+            z-index: 9998; display: flex; flex-direction: column; gap: 15px; opacity: 0; backdrop-filter: blur(5px); display: none;
+        }
+        .score-item-s1 { opacity: 0.3; transition: opacity 0.4s ease; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+        .score-item-s1.active { opacity: 1; }
+        .score-item-s1 span.num { font-size: 2.2rem; margin: 0 5px; font-weight: 900; }
+        #score-singles.active span.num { color: #f59e0b; }
+        #score-pairs.active span.num { color: #16a34a; }   
+        #score-sets.active span.num { color: #3b82f6; }    
+
+        #nucleus-wrapper {
+            position: absolute; width: 600px; height: 600px; z-index: 4;
+            top: 50%; left: 50%; transform: translate(-50%, -50%); display: none;
+        }
+        #nucleus {
+            width: 100%; height: 100%; background: rgba(255,255,255,0.7);
+            border: 4px dashed #64748b; border-radius: 50%;
+            position: relative; box-shadow: inset 0 0 50px rgba(255,255,255,0.8), 0 10px 30px rgba(0,0,0,0.1);
+            backdrop-filter: blur(3px);
+        }
+
+        .stage-container {
+            position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 40px;
+            z-index: 4; top: 50%; left: 50%; transform: translate(-50%, -50%); opacity: 0; display: none;
+            width: auto; height: 100%; pointer-events: none; 
+        }
+
+        .cell-label {
+            position: absolute; left: 50%; transform: translateX(-50%);
+            backdrop-filter: blur(4px); padding: 8px 18px; border-radius: 12px; font-weight: bold; 
+            font-size: 1.1rem; text-align: center; line-height: 1.4;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 5; pointer-events: none; white-space: nowrap;
+        }
+        .mother-label-m { top: -25px; background: rgba(254, 240, 138, 0.85); border: 2px solid #f59e0b; color: #9a3412; }
+        .sperm-label { top: -25px; background: rgba(219, 234, 254, 0.85); border: 2px solid #60a5fa; color: #1e3a8a; }
+        .mother-label-f { top: -25px; background: rgba(254, 205, 211, 0.85); border: 2px solid #f43f5e; color: #881337; }
+        .egg-label { top: -25px; background: rgba(253, 232, 232, 0.85); border: 2px solid #fb7185; color: #9f1239; }
+
+        .mother-cell {
+            width: 440px; height: 440px; background: rgba(255,255,255,0.7); border: 4px dashed #64748b; border-radius: 50%;
+            position: relative; box-shadow: inset 0 0 40px rgba(255,255,255,0.8), 0 5px 15px rgba(0,0,0,0.05); backdrop-filter: blur(3px); pointer-events: auto; z-index: 10; 
+        }
+        .target-wrapper { position: relative; width: 320px; height: 320px; pointer-events: auto; z-index: 5; }
+        
+        #sperm-cell {
+            width: 100%; height: 100%; background: rgba(255,255,255,0.85); border: 4px dashed #3b82f6; border-radius: 50%;
+            position: absolute; box-shadow: inset 0 0 30px rgba(59, 130, 246, 0.1), 0 5px 15px rgba(59, 130, 246, 0.05); backdrop-filter: blur(3px); transition: box-shadow 0.3s; z-index: 2;
+        }
+        #egg-cell {
+            width: 100%; height: 100%; background: rgba(255,255,255,0.85); border: 4px dashed #f43f5e; border-radius: 50%;
+            position: absolute; box-shadow: inset 0 0 30px rgba(244, 63, 94, 0.1), 0 5px 15px rgba(244, 63, 94, 0.05); backdrop-filter: blur(3px); transition: box-shadow 0.3s; z-index: 2;
+        }
+
+        .sperm-tail {
+            position: absolute; top: 50%; right: 100%; width: 140px; height: 24px; background: #3b82f6; border-radius: 12px 0 0 12px;
+            transform-origin: right center; transform: translateY(-50%); animation: swimS 1.5s ease-in-out infinite alternate; z-index: 1; filter: drop-shadow(-4px 4px 6px rgba(59, 130, 246, 0.3));
+        }
+        @keyframes swimS {
+            0% { transform: translateY(-50%) rotate(4deg) scaleX(1); clip-path: polygon(0 20%, 25% 0, 50% 20%, 75% 0, 100% 20%, 100% 80%, 75% 100%, 50% 80%, 25% 100%, 0 80%); }
+            100% { transform: translateY(-50%) rotate(-4deg) scaleX(1.05); clip-path: polygon(0 0, 25% 20%, 50% 0, 75% 20%, 100% 0, 100% 80%, 75% 100%, 50% 80%, 25% 100%, 0 80%); }
+        }
+
+        .score-board-s2 {
+            position: absolute; top: 50%; transform: translateY(-50%);
+            background: rgba(255,255,255,0.95); color: #334155; padding: 25px 30px; border-radius: 16px;
+            font-size: 1.25rem; font-weight: bold; width: 320px; box-sizing: border-box;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15); border: 2px solid #e2e8f0; 
+            display: flex; flex-direction: column; gap: 15px; backdrop-filter: blur(5px);
+            opacity: 0; pointer-events: none; transition: opacity 0.5s; z-index: 10;
+        }
+        #score-board-m { right: calc(100% + 100px); } 
+        #score-board-f { right: calc(100% + 30px); }  
+
+        .score-item-s2 { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+        .score-item-s2 select {
+            font-size: 1.25rem; padding: 8px 12px; border-radius: 8px; border: 2px solid #cbd5e1;
+            background: white; color: #1e293b; font-weight: bold; outline: none; cursor: pointer;
+            min-width: 60px; text-align: center;
+        }
+        
+        .highlight-sex { color: #ef4444; } .highlight-somatic { color: #3b82f6; } 
+
+        .floating-combo {
+            position: absolute; font-size: 3.2rem; font-weight: 900;
+            pointer-events: none; z-index: 1000000; 
+            text-shadow: 0px 4px 15px rgba(0,0,0,0.5), 0px 0px 8px rgba(255,255,255,1);
+            white-space: nowrap; user-select: none;
+        }
+
+        .drag-wrapper { position: absolute; cursor: grab; z-index: 50; top: 0; left: 0; pointer-events: auto; }
+        .drag-wrapper:active { cursor: grabbing; z-index: 100000 !important; }
+        .drag-wrapper.grouped { z-index: 40; }
+        
+        .rotate-wrapper { width: 100%; height: 100%; animation: seesaw 3s ease-in-out infinite alternate; }
+        .drag-wrapper.dragging .rotate-wrapper, .drag-wrapper.grouped .rotate-wrapper, .drag-wrapper.snapped .rotate-wrapper { animation: none !important; transform: rotate(0deg) !important; }
+        .drag-wrapper.in-sperm .rotate-wrapper { animation: seesawSmall 3s ease-in-out infinite alternate !important; }
+        @keyframes seesaw { 0% { transform: rotate(-8deg); } 100% { transform: rotate(8deg); } }
+        @keyframes seesawSmall { 0% { transform: rotate(-4deg); } 100% { transform: rotate(4deg); } }
+
+        .chromosome-visual { width: 24px !important; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; transition: filter 0.3s, transform 0.2s; }
+        .chrom-arm { width: 100%; flex: 1; background: inherit; z-index: 1; }
+        .top-arm { border-radius: 12px 12px 2px 2px; clip-path: polygon(0 0, 100% 0, 100% 20%, 90% 60%, 75% 100%, 25% 100%, 10% 60%, 0 20%); margin-bottom: -4px; }
+        .bottom-arm { border-radius: 2px 2px 12px 12px; clip-path: polygon(25% 0%, 75% 0%, 90% 40%, 100% 80%, 100% 100%, 0 100%, 0 80%, 10% 40%); margin-top: -4px; }
+        .centromere { width: 18px; height: 18px; border-radius: 50%; position: relative; display: flex; align-items: center; justify-content: center; border: 2px solid #0f172a; z-index: 5; color: white; font-size: 11px; font-weight: 900; user-select: none; box-sizing: border-box; }
+
+        .drag-wrapper.snapped .chromosome-visual, .snapped-effect .chromosome-visual { filter: drop-shadow(0 0 8px rgba(34, 197, 94, 0.9)); }
+        
+        .somatic-dark .chrom-arm { background: linear-gradient(180deg, #1e40af 0%, #2563eb 100%); }
+        .somatic-dark .centromere { background: #3b82f6; }
+        .sex-bright .chrom-arm { background: linear-gradient(180deg, #0284c7 0%, #38bdf8 100%); }
+        .sex-bright .centromere { background: #0ea5e9; border: 2px solid #082f49; }
+
+        .somatic-pink .chrom-arm { background: linear-gradient(180deg, #be185d 0%, #f43f5e 100%); }
+        .somatic-pink .centromere { background: #f43f5e; border-color: #4c0519;}
+        .sex-pink .chrom-arm { background: linear-gradient(180deg, #db2777 0%, #fb7185 100%); }
+        .sex-pink .centromere { background: #fb7185; border-color: #831843;}
+
+        #mating-btn {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0);
+            background: linear-gradient(135deg, #f43f5e, #3b82f6); color: white; border: none; padding: 25px 50px;
+            font-size: 2.5rem; font-weight: bold; border-radius: 50px; cursor: pointer;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.3); z-index: 100000; border: 4px solid white; display: none;
+        }
+        #mating-btn:hover { filter: brightness(1.1); transform: translate(-50%, -50%) scale(1.05) !important; }
+        
+        #mating-img-overlay {
+            position: absolute; top: 50%; left: 50%; width: 80vw; height: 80vh; transform: translate(-50%, -50%) scale(0);
+            background-image: url('05.png'); background-size: contain; background-position: center; background-repeat: no-repeat;
+            z-index: 100001; display: none; pointer-events: none; filter: drop-shadow(0 20px 40px rgba(0,0,0,0.5));
+        }
+
+        #next-level-overlay {
+            position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(255,255,255,0.5); backdrop-filter: blur(5px);
+            z-index: 100000; display: none; justify-content: center; align-items: center;
+        }
+        .menu-box {
+            background: white; padding: 40px 50px; border-radius: 24px; text-align: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.15); border: 2px solid #e2e8f0; max-width: 500px;
+            display: flex; flex-direction: column; gap: 20px;
+        }
+        .menu-box h2 { font-size: 2.2rem; color: #1e293b; margin-top: 0; margin-bottom: 10px; }
+        .menu-btn {
+            background: linear-gradient(135deg, #16a34a, #047857); color: white; border: none; padding: 20px 40px;
+            font-size: 1.5rem; font-weight: bold; border-radius: 50px; cursor: pointer; width: 100%;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1); transition: transform 0.2s, filter 0.2s;
+        }
+        .menu-btn:hover { transform: scale(1.03); filter: brightness(1.1); }
+        .menu-btn-advanced { background: linear-gradient(135deg, #9333ea, #7e22ce); }
+
+    </style>
+</head>
+<body>
+
+    <div id="bg-layer-dim" class="bg-layer"></div>
+    <div id="bg-layer-bright" class="bg-layer"></div>
+    <div id="bg-female-02" class="bg-half-right"></div>
+    <div id="bg-female-02-2" class="bg-half-right"></div>
+
+    <div id="start-overlay">
+        <button class="start-btn" onclick="startIntroAnimationS1()">進入果蠅細胞</button>
+    </div>
+    
+    <div id="next-level-overlay">
+        <div class="menu-box">
+            <h2>🎉 恭喜破關！選擇下一個挑戰</h2>
+            <button class="menu-btn" onclick="restartGame('2n12')">繼續挑戰：不同染色體數量</button>
+            <button class="menu-btn menu-btn-advanced" onclick="restartGame('3n12')">高中先修：3套生物(牡蠣)</button>
+        </div>
+    </div>
+
+    <div id="magnifying-glass"></div>
+    <div id="baby-fly-img"></div>
+
+    <div id="score-board-s1">
+        <div id="score-singles" class="score-item-s1"><div>染色體有幾條：</div> <div><span class="num">0</span> 條</div></div>
+        <div id="score-pairs" class="score-item-s1"><div id="label-pairs">染色體有幾對：</div> <div><span class="num">0</span> <span id="unit-pairs">對</span></div></div>
+        <div id="score-sets" class="score-item-s1"><div>染色體有幾套：</div> <div><span class="num">0</span> 套</div></div>
+    </div>
+    <div id="nucleus-wrapper"><div id="nucleus"></div></div>
+
+    <div id="male-container" class="stage-container">
+        <div id="mother-cell" class="mother-cell">
+            <div class="cell-label mother-label-m">睪丸內的<br>生殖母細胞(體細胞)</div>
+        </div>
+        <div id="sperm-wrapper" class="target-wrapper">
+            <div class="sperm-tail"></div>
+            <div class="cell-label sperm-label">精子<br>(生殖細胞)</div>
+            <div id="sperm-cell"></div>
+            
+            <div id="score-board-m" class="score-board-s2">
+                <div style="font-size: 1.1rem; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 5px; color: #1e3a8a;">精子內點名確認</div>
+                <div class="score-item-s2"><div><span class="highlight-somatic">體</span>染色體：</div><div><select id="m-somatic-singles"></select> 條</div></div>
+                <div class="score-item-s2"><div><span class="highlight-sex">性</span>染色體：</div><div><select id="m-sex-singles"></select> 條</div></div>
+                <div class="score-item-s2"><div><span class="highlight-somatic">體</span>染色體：</div><div><select id="m-somatic-pairs"></select> 對</div></div>
+                <div class="score-item-s2"><div><span class="highlight-sex">性</span>染色體：</div><div><select id="m-sex-pairs"></select> 對</div></div>
+                <div class="score-item-s2"><div>染色體套數：</div><div><select id="m-sets-score"></select> 套</div></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="female-container" class="stage-container">
+        <div id="female-mother-cell" class="mother-cell">
+            <div class="cell-label mother-label-f">卵巢內的<br>生殖母細胞(體細胞)</div>
+        </div>
+        <div id="egg-wrapper" class="target-wrapper">
+            <div class="cell-label egg-label">卵子<br>(生殖細胞)</div>
+            <div id="egg-cell"></div>
+            
+            <div id="score-board-f" class="score-board-s2">
+                <div style="font-size: 1.1rem; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 5px; color: #9f1239;">卵子內點名確認</div>
+                <div class="score-item-s2"><div><span class="highlight-somatic">體</span>染色體：</div><div><select id="f-somatic-singles"></select> 條</div></div>
+                <div class="score-item-s2"><div><span class="highlight-sex">性</span>染色體：</div><div><select id="f-sex-singles"></select> 條</div></div>
+                <div class="score-item-s2"><div><span class="highlight-somatic">體</span>染色體：</div><div><select id="f-somatic-pairs"></select> 對</div></div>
+                <div class="score-item-s2"><div><span class="highlight-sex">性</span>染色體：</div><div><select id="f-sex-pairs"></select> 對</div></div>
+                <div class="score-item-s2"><div>染色體套數：</div><div><select id="f-sets-score"></select> 套</div></div>
+            </div>
+        </div>
+    </div>
+
+    <button id="mating-btn" onclick="startFertilization()">交尾</button>
+    <div id="mating-img-overlay"></div>
+    <div id="center-message"></div>
+
+    <script>
+        gsap.registerPlugin(Draggable);
+
+        let gameConfig = { mode: '2n10', ploidy: 2, nValue: 5 }; 
+
+        const maleChromosomesData = [
+            { id: 'm1a', pair: '1', h: 240, type: 'somatic-dark' }, { id: 'm1b', pair: '1', h: 240, type: 'somatic-dark' },
+            { id: 'm2a', pair: '2', h: 187, type: 'somatic-dark' }, { id: 'm2b', pair: '2', h: 187, type: 'somatic-dark' },
+            { id: 'm3a', pair: '3', h: 133, type: 'somatic-dark' }, { id: 'm3b', pair: '3', h: 133, type: 'somatic-dark' },
+            { id: 'm4a', pair: '4', h: 80,  type: 'somatic-dark' }, { id: 'm4b', pair: '4', h: 80,  type: 'somatic-dark' },
+            { id: 'm5a', pair: '5', h: 160, type: 'sex-bright' },   { id: 'm5b', pair: '5', h: 106, type: 'sex-bright' } 
+        ];
+        const femaleChromosomesData = [
+            { id: 'f1a', pair: '1', h: 240, type: 'somatic-pink' }, { id: 'f1b', pair: '1', h: 240, type: 'somatic-pink' },
+            { id: 'f2a', pair: '2', h: 187, type: 'somatic-pink' }, { id: 'f2b', pair: '2', h: 187, type: 'somatic-pink' },
+            { id: 'f3a', pair: '3', h: 133, type: 'somatic-pink' }, { id: 'f3b', pair: '3', h: 133, type: 'somatic-pink' },
+            { id: 'f4a', pair: '4', h: 80,  type: 'somatic-pink' }, { id: 'f4b', pair: '4', h: 80,  type: 'somatic-pink' },
+            { id: 'f5a', pair: '5', h: 160, type: 'sex-pink' },     { id: 'f5b', pair: '5', h: 160, type: 'sex-pink' } 
+        ];
+
+        const maleChromosomesData_2n12 = [
+            { id: 'm1a', pair: '1', h: 220, type: 'somatic-dark' }, { id: 'm1b', pair: '1', h: 220, type: 'somatic-dark' },
+            { id: 'm2a', pair: '2', h: 180, type: 'somatic-dark' }, { id: 'm2b', pair: '2', h: 180, type: 'somatic-dark' },
+            { id: 'm3a', pair: '3', h: 150, type: 'somatic-dark' }, { id: 'm3b', pair: '3', h: 150, type: 'somatic-dark' },
+            { id: 'm4a', pair: '4', h: 120, type: 'somatic-dark' }, { id: 'm4b', pair: '4', h: 120, type: 'somatic-dark' },
+            { id: 'm5a', pair: '5', h: 90,  type: 'somatic-dark' }, { id: 'm5b', pair: '5', h: 90,  type: 'somatic-dark' },
+            { id: 'm6a', pair: '6', h: 160, type: 'sex-bright' },   { id: 'm6b', pair: '6', h: 106, type: 'sex-bright' }
+        ];
+        const femaleChromosomesData_2n12 = [
+            { id: 'f1a', pair: '1', h: 220, type: 'somatic-pink' }, { id: 'f1b', pair: '1', h: 220, type: 'somatic-pink' },
+            { id: 'f2a', pair: '2', h: 180, type: 'somatic-pink' }, { id: 'f2b', pair: '2', h: 180, type: 'somatic-pink' },
+            { id: 'f3a', pair: '3', h: 150, type: 'somatic-pink' }, { id: 'f3b', pair: '3', h: 150, type: 'somatic-pink' },
+            { id: 'f4a', pair: '4', h: 120, type: 'somatic-pink' }, { id: 'f4b', pair: '4', h: 120, type: 'somatic-pink' },
+            { id: 'f5a', pair: '5', h: 90,  type: 'somatic-pink' }, { id: 'f5b', pair: '5', h: 90,  type: 'somatic-pink' },
+            { id: 'f6a', pair: '6', h: 160, type: 'sex-pink' },     { id: 'f6b', pair: '6', h: 160, type: 'sex-pink' }
+        ];
+
+        const chromosomesData_3n12 = [
+            { id: '3n1a', pair: '1', h: 240, type: 'somatic-dark' }, { id: '3n1b', pair: '1', h: 240, type: 'somatic-dark' }, { id: '3n1c', pair: '1', h: 240, type: 'somatic-dark' },
+            { id: '3n2a', pair: '2', h: 180, type: 'somatic-dark' }, { id: '3n2b', pair: '2', h: 180, type: 'somatic-dark' }, { id: '3n2c', pair: '2', h: 180, type: 'somatic-dark' },
+            { id: '3n3a', pair: '3', h: 120, type: 'somatic-dark' }, { id: '3n3b', pair: '3', h: 120, type: 'somatic-dark' }, { id: '3n3c', pair: '3', h: 120, type: 'somatic-dark' },
+            { id: '3n4a', pair: '4', h: 80,  type: 'somatic-dark' }, { id: '3n4b', pair: '4', h: 80,  type: 'somatic-dark' },  { id: '3n4c', pair: '4', h: 80,  type: 'somatic-dark' }
+        ];
+
+        let globalStage = 1; let currentMode = 'singles'; let currentScale = 1;
+        let singlesScore = 0; let pairsScore = 0; let setsScore = 0;
+        
+        const NUCLEUS_RADIUS = 300; const MOTHER_RADIUS = 220; const TARGET_RADIUS = 160;  
+        let boardEntities = []; let isPhysicsRunning = false;
+        let messageTimeout;
+
+        function showMessage(text, duration = 3000) {
+            const msg = document.getElementById('center-message');
+            if (messageTimeout) clearTimeout(messageTimeout);
+            gsap.killTweensOf(msg);
+            
+            msg.innerHTML = text; 
+            msg.style.display = 'block';
+            gsap.fromTo(msg, { scale: 0.5, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5, ease: "back.out(1.7)" });
+            
+            if(duration > 0) {
+                messageTimeout = setTimeout(() => { 
+                    gsap.to(msg, { scale: 0.8, opacity: 0, duration: 0.3, onComplete: () => msg.style.display = 'none' }); 
+                }, duration);
+            }
+        }
+
+        function showFloatingCombo(containerId, x, y, text, color) {
+            const comboEl = document.createElement('div');
+            comboEl.className = 'floating-combo';
+            comboEl.innerText = text;
+            comboEl.style.color = color;
+            document.getElementById(containerId).appendChild(comboEl);
+            
+            const tl = gsap.timeline({ onComplete: () => comboEl.remove() });
+            tl.fromTo(comboEl, { x: x, y: y, opacity: 0, scale: 0.5 }, { opacity: 1, scale: 1.2, duration: 0.4, ease: "back.out(2)" })
+              .to(comboEl, { y: y - 80, duration: 1.5, ease: "power1.out" }, "-=0.1")
+              .to(comboEl, { opacity: 0, duration: 0.5 }, "-=0.3");
+        }
+
+        function createChromVisual(chrom) {
+            const rotateLayer = document.createElement('div');
+            rotateLayer.className = 'rotate-wrapper'; rotateLayer.style.height = chrom.h + 'px';
+            const visual = document.createElement('div');
+            visual.className = `chromosome-visual ${chrom.type}`; visual.style.height = '100%';
+            const topArm = document.createElement('div'); topArm.className = 'chrom-arm top-arm';
+            const bottomArm = document.createElement('div'); bottomArm.className = 'chrom-arm bottom-arm';
+            const centromere = document.createElement('div'); centromere.className = 'centromere';
+            if(chrom.type.includes('sex')) centromere.innerText = '性';
+            visual.appendChild(topArm); visual.appendChild(centromere); visual.appendChild(bottomArm);
+            rotateLayer.appendChild(visual); return rotateLayer;
+        }
+
+        function setUIActiveS1(mode) {
+            document.querySelectorAll('.score-item-s1').forEach(el => el.classList.remove('active'));
+            document.getElementById('score-' + mode).classList.add('active');
+        }
+
+        function startIntroAnimationS1() {
+            document.getElementById('start-overlay').style.display = 'none';
+            const mGlass = document.getElementById('magnifying-glass');
+            const bgBright = document.getElementById('bg-layer-bright');
+            const nucWrapper = document.getElementById('nucleus-wrapper');
+            const scoreBoard = document.getElementById('score-board-s1');
+            
+            scoreBoard.style.display = 'flex'; mGlass.style.display = 'block';
+            const tl = gsap.timeline();
+            tl.fromTo(mGlass, { x: 300, y: 300, scale: 0.5 }, { x: 0, y: 0, scale: 1, duration: 1.5, ease: "power2.out" })
+              .to(mGlass, { x: -100, y: 50, duration: 1, ease: "sine.inOut" })
+              .to(mGlass, { x: 0, y: 0, duration: 1, ease: "sine.inOut" })
+              .to(mGlass, { scale: 20, opacity: 0, duration: 1.5, ease: "power4.in" })
+              .to(bgBright, { opacity: 0, duration: 1.5 }, "<")
+              .to(nucWrapper, { display: 'block', opacity: 1, scale: 1, duration: 1.2, ease: "back.out(1.2)" }, ">-0.2")
+              .to(scoreBoard, { opacity: 1, duration: 0.8 }, "<0.5")
+              .call(() => {
+                  mGlass.style.display = 'none'; currentMode = 'singles'; 
+                  document.getElementById('score-singles').classList.add('active');
+                  initChromosomesS1();
+                  if (!isPhysicsRunning) { isPhysicsRunning = true; requestAnimationFrame(updatePhysics); }
+              });
+        }
+
+        function initChromosomesS1() {
+            const nucleus = document.getElementById('nucleus'); nucleus.innerHTML = ''; boardEntities = [];
+            
+            let dataToLoad = maleChromosomesData;
+            if (gameConfig.mode === '2n12') dataToLoad = maleChromosomesData_2n12;
+            if (gameConfig.mode === '3n12') dataToLoad = chromosomesData_3n12;
+
+            dataToLoad.forEach((chrom) => {
+                const wrapper = document.createElement('div'); wrapper.className = 'drag-wrapper'; wrapper.style.width = '24px'; wrapper.style.height = chrom.h + 'px';
+                const rotateLayer = createChromVisual(chrom); rotateLayer.style.animationDelay = `-${Math.random() * 3}s`;
+                wrapper.appendChild(rotateLayer); nucleus.appendChild(wrapper);
+                const angle = Math.random() * Math.PI * 2; const r = Math.random() * (NUCLEUS_RADIUS - 130);
+                const startX = NUCLEUS_RADIUS + r * Math.cos(angle) - 12; const startY = NUCLEUS_RADIUS + r * Math.sin(angle) - (chrom.h / 2);
+                gsap.set(wrapper, { x: startX, y: startY });
+                const entity = { el: wrapper, id: chrom.id, pair: chrom.pair, h: chrom.h, included: [{ id: chrom.id, pair: chrom.pair, h: chrom.h, layerEl: rotateLayer }], x: startX, y: startY, w: 24, h: chrom.h, vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3, isDragging: false, isFloating: true, container: 'nucleus', isCounted: false };
+                boardEntities.push(entity); bindDragS1(entity);
+            });
+        }
+
+        function transitionToPairs() {
+            currentMode = 'pairs'; setUIActiveS1('pairs');
+            const unit = gameConfig.ploidy === 3 ? '組' : '對';
+            showMessage(` 請找出同源染色體！`, 3000);
+            
+            boardEntities.forEach(e => {
+                e.isFloating = false; 
+                const targetX = e.x + (Math.random() > 0.5 ? 40 : -40);
+                const targetY = e.y + (Math.random() > 0.5 ? 40 : -40);
+
+                gsap.to(e.el, {
+                    x: targetX, y: targetY, duration: 1.5, ease: "power2.out",
+                    onUpdate: function() { e.x = gsap.getProperty(e.el, "x"); e.y = gsap.getProperty(e.el, "y"); },
+                    onComplete: () => {
+                        e.el.classList.remove('snapped');
+                        e.vx = (Math.random() - 0.5) * 0.4;
+                        e.vy = (Math.random() - 0.5) * 0.4;
+                        e.isFloating = true; 
+                    }
+                });
+            });
+        }
+
+        function transitionToSets() {
+            currentMode = 'sets'; setUIActiveS1('sets');
+            showMessage(`請將染色體組裝成套！`, 3000);
+            const currentGroups = [...boardEntities]; boardEntities = []; 
+            
+            currentGroups.forEach(group => {
+                group.included.forEach((item, idx) => {
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'drag-wrapper snapped'; 
+                    wrapper.style.width = '24px'; wrapper.style.height = item.h + 'px';
+                    item.layerEl.style.position = 'absolute';
+                    item.layerEl.style.left = '0px'; item.layerEl.style.top = '0px';
+                    wrapper.appendChild(item.layerEl);
+                    document.getElementById('nucleus').appendChild(wrapper);
+                    
+                    const startX = group.x + (idx * 30);
+                    const startY = group.y + (group.h - item.h);
+                    gsap.set(wrapper, { x: startX, y: startY });
+                    
+                    const newEntity = {
+                        el: wrapper, id: item.id, pair: item.pair, h: item.h,
+                        included: [item], x: startX, y: startY, w: 24, h: item.h,
+                        vx: 0, vy: 0, isDragging: false, isFloating: false, 
+                        container: 'nucleus', isCounted: true 
+                    };
+                    boardEntities.push(newEntity); bindDragS1(newEntity);
+
+                    const targetX = startX + (idx === 0 ? -60 : 60);
+                    const targetY = startY + (Math.random() * 60 - 30);
+
+                    gsap.to(wrapper, {
+                        x: targetX, y: targetY, duration: 1.5, ease: "power2.out",
+                        onUpdate: function() { newEntity.x = gsap.getProperty(wrapper, "x"); newEntity.y = gsap.getProperty(wrapper, "y"); },
+                        onComplete: () => { 
+                            wrapper.classList.remove('snapped'); 
+                            newEntity.vx = (Math.random() > 0.5 ? 1 : -1) * (0.2 + Math.random() * 0.3);
+                            newEntity.vy = (Math.random() > 0.5 ? 1 : -1) * (0.2 + Math.random() * 0.3);
+                            newEntity.isFloating = true; 
+                        }
+                    });
+                });
+                group.el.remove(); 
+            });
+        }
+
+        function bindDragS1(entity) {
+            Draggable.create(entity.el, {
+                bounds: "#nucleus",
+                onPress: function() { entity.isDragging = true; this.target.classList.add('dragging'); gsap.to(this.target, { scale: 1.1, duration: 0.2 }); gsap.set(this.target, { zIndex: 100000 }); },
+                onDrag: function() { entity.x = this.x; entity.y = this.y; },
+                onRelease: function() {
+                    entity.isDragging = false; this.target.classList.remove('dragging'); gsap.to(this.target, { scale: 1, duration: 0.2 }); gsap.set(this.target, { zIndex: 50 });
+                    if (currentMode === 'singles') {
+                        if (!entity.isCounted) {
+                            entity.isCounted = true; entity.isFloating = false; this.target.classList.add('snapped'); 
+                            singlesScore++; document.querySelector('#score-singles span.num').innerText = singlesScore;
+                            showFloatingCombo('nucleus', entity.x, entity.y - 30, '+1 條', '#f59e0b');
+
+                            const maxSingles = gameConfig.ploidy * gameConfig.nValue;
+                            if (singlesScore === maxSingles) { 
+                                showMessage(`🎉 ${maxSingles}條染色體清點完成！`, 2500); 
+                                setTimeout(transitionToPairs, 2500); 
+                            }
+                        }
+                    } else if (currentMode === 'pairs') { checkPairProximityS1(entity, this); } else { checkSetProximityS1(entity, this); }
+                }
+            });
+        }
+
+        function checkPairProximityS1(dropEntity, dragInstance) {
+            if(dropEntity.included.length >= gameConfig.ploidy) return; 
+            const partner = boardEntities.find(e => 
+                e.id !== dropEntity.id && 
+                e.included[0].pair === dropEntity.pair && 
+                (e.included.length + dropEntity.included.length <= gameConfig.ploidy)
+            );
+            if (!partner) return;
+            const dist = Math.hypot((dropEntity.x+dropEntity.w/2) - (partner.x+partner.w/2), (dropEntity.y+dropEntity.h/2) - (partner.y+partner.h/2));
+            if (dist < 60) mergeEntitiesS1(dropEntity, partner, dragInstance, true);
+        }
+
+        function checkSetProximityS1(dropEntity, dragInstance) {
+            let targetEntity = null; let minDist = 80; 
+            boardEntities.forEach(e => {
+                if(e === dropEntity) return;
+                if (dropEntity.included.length + e.included.length > gameConfig.nValue) return;
+                const dropPairs = dropEntity.included.map(i => i.pair);
+                const ePairs = e.included.map(i => i.pair);
+                if(dropPairs.some(p => ePairs.includes(p))) return; 
+
+                const dist = Math.hypot((dropEntity.x+dropEntity.w/2) - (e.x+e.w/2), (dropEntity.y+dropEntity.h/2) - (e.y+e.h/2));
+                if(dist < minDist) { minDist = dist; targetEntity = e; }
+            });
+            if(targetEntity) mergeEntitiesS1(dropEntity, targetEntity, dragInstance, false);
+        }
+
+        function mergeEntitiesS1(e1, e2, dragInstance, isPairMode) {
+            dragInstance.kill(); Draggable.get(e2.el).kill();
+            boardEntities = boardEntities.filter(e => e.id !== e1.id && e.id !== e2.id);
+            const newIncluded = [...e1.included, ...e2.included].sort((a, b) => { 
+                if (a.pair == gameConfig.nValue && b.pair != gameConfig.nValue) return 1; 
+                if (b.pair == gameConfig.nValue && a.pair != gameConfig.nValue) return -1; 
+                return b.h - a.h; 
+            });
+            const group = document.createElement('div'); group.className = 'drag-wrapper grouped'; 
+            const newW = newIncluded.length * 30 - 6; const maxH = Math.max(...newIncluded.map(i => i.h));
+            group.style.width = newW + 'px'; group.style.height = maxH + 'px';
+
+            newIncluded.forEach((item, index) => {
+                item.layerEl.style.position = 'absolute'; item.layerEl.style.left = (index * 30) + 'px';
+                item.layerEl.style.width = '24px'; item.layerEl.style.height = item.h + 'px'; item.layerEl.style.top = (maxH - item.h) + 'px'; group.appendChild(item.layerEl);
+            });
+            
+            const isCompleted = isPairMode ? (newIncluded.length === gameConfig.ploidy) : (newIncluded.length === gameConfig.nValue);
+            if (isCompleted) group.classList.add('snapped');
+            document.getElementById('nucleus').appendChild(group);
+            const avgX = (e1.x + e2.x) / 2; const avgY = (e1.y + e2.y) / 2; gsap.set(group, { x: avgX, y: avgY });
+
+            const groupEntity = { el: group, id: 'group_' + Math.random(), included: newIncluded, x: avgX, y: avgY, w: newW, h: maxH, vx: 0, vy: 0, isDragging: false, isFloating: false, container: 'nucleus' };
+            boardEntities.push(groupEntity); e1.el.remove(); e2.el.remove(); bindDragS1(groupEntity);
+            gsap.fromTo(group, { scale: 1.4 }, { scale: 1, duration: 0.6, ease: "elastic.out(1, 0.5)" });
+
+            if (isCompleted) {
+                if (isPairMode) {
+                    pairsScore++; document.querySelector('#score-pairs span.num').innerText = pairsScore;
+                    const unit = gameConfig.ploidy === 3 ? '組' : '對';
+                    showFloatingCombo('nucleus', avgX + 15, avgY - 40, '+1 ' + unit, '#16a34a');
+                    if(pairsScore === gameConfig.nValue) { 
+                        showMessage(`🎉 ${gameConfig.nValue}${unit}同源配對完成！`, 2500); 
+                        setTimeout(transitionToSets, 2500); 
+                    }
+                } else {
+                    setsScore++; document.querySelector('#score-sets span.num').innerText = setsScore;
+                    showFloatingCombo('nucleus', avgX + newW/2 - 20, avgY - 40, '+1 套', '#3b82f6');
+                    if(setsScore === gameConfig.ploidy) { 
+                        showMessage(`🏆 ${gameConfig.ploidy}套打包完成！`, 2500); 
+                        
+                        if (gameConfig.mode === '3n12') {
+                            setTimeout(() => {
+                                showMessage('⚠️ 奇數套 (3n) 生物因為同源染色體無法平均分配，無法進行正常的減數分裂！', 5000);
+                                setTimeout(() => {
+                                    document.getElementById('next-level-overlay').style.display = 'flex';
+                                    gsap.fromTo('#next-level-overlay .menu-box', {scale: 0.5, opacity: 0}, {scale: 1, opacity: 1, duration: 0.8, ease: "back.out(1.2)"});
+                                }, 5500);
+                            }, 2500);
+                        } else {
+                            setTimeout(transitionToStage2, 2500); 
+                        }
+                    }
+                }
+            }
+        }
+
+        // ---------- 選單與重新啟動機制 ----------
+        function restartGame(mode) {
+            document.getElementById('next-level-overlay').style.display = 'none';
+
+            boardEntities.forEach(e => {
+                if(e.el) {
+                    const d = Draggable.get(e.el);
+                    if (d) d.kill();
+                    e.el.remove();
+                }
+            });
+            boardEntities = [];
+
+            singlesScore = 0; pairsScore = 0; setsScore = 0;
+            document.querySelector('#score-singles span.num').innerText = 0;
+            document.querySelector('#score-pairs span.num').innerText = 0;
+            document.querySelector('#score-sets span.num').innerText = 0;
+
+            if (mode === '2n12') {
+                gameConfig = { mode: '2n12', ploidy: 2, nValue: 6 };
+                document.getElementById('bg-layer-bright').style.backgroundImage = "url('01.png')";
+                document.getElementById('bg-layer-dim').style.backgroundImage = "url('01-2.png')";
+            } else if (mode === '3n12') {
+                gameConfig = { mode: '3n12', ploidy: 3, nValue: 4 };
+                document.getElementById('bg-layer-bright').style.backgroundImage = "url('06.png')";
+                document.getElementById('bg-layer-dim').style.backgroundImage = "url('06-2.png')";
+            }
+
+            const unit = gameConfig.ploidy === 3 ? '組' : '對';
+            document.getElementById('label-pairs').innerHTML = `染色體有幾${unit}：`;
+            document.getElementById('unit-pairs').innerText = unit;
+
+            globalStage = 1; currentScale = 1;
+
+            gsap.set('#male-container', { left: '50%', display: 'none', opacity: 0, scale: 1 });
+            gsap.set('#female-container', { left: '50%', display: 'none', opacity: 0, scale: 1 });
+            gsap.set(['#bg-layer-dim', '#bg-layer-bright'], { width: '100%', x: 0, y: 0, scaleX: 1, scaleY: 1 });
+            gsap.to('#bg-layer-bright', { opacity: 1, duration: 1 }); 
+            gsap.set(['#bg-female-02', '#bg-female-02-2'], { opacity: 0, scale: 1, x: 0, y: 0 });
+            gsap.set('#nucleus-wrapper', { scale: 1, opacity: 1, display: 'block' });
+            gsap.set('#score-board-s1', { display: 'flex', opacity: 1 });
+            gsap.set('#mating-img-overlay', { display: 'none', scale: 0 });
+            gsap.set('#baby-fly-img', { display: 'none', scale: 0 });
+            
+            // 系統防呆：嚴格重置計分板鎖定狀態
+            gsap.set('#score-board-m', { pointerEvents: 'none', opacity: 0 });
+            gsap.set('#score-board-f', { pointerEvents: 'none', opacity: 0 });
+
+            gsap.set('#sperm-wrapper', { x: 0 });
+            gsap.set('#egg-wrapper', { x: 0 });
+            gsap.set('#sperm-cell', { opacity: 1, boxShadow: "inset 0 0 30px rgba(59, 130, 246, 0.1), 0 5px 15px rgba(59, 130, 246, 0.05)" });
+            gsap.set('#egg-cell', { scale: 1, opacity: 1, boxShadow: "inset 0 0 30px rgba(244, 63, 94, 0.1), 0 5px 15px rgba(244, 63, 94, 0.05)" });
+            gsap.set(['#mother-cell', '#female-mother-cell', '.sperm-tail', '.mother-label-m', '.mother-label-f'], { opacity: 1 });
+            gsap.set('.egg-label', { y: 0, scale: 1 });
+            document.querySelector('.egg-label').innerText = '生殖細胞(卵子)';
+
+            currentMode = 'singles';
+            setUIActiveS1('singles');
+            initChromosomesS1();
+        }
+
+        // ---------- 第二階段 ----------
+        function initDropdowns(prefix) {
+            const selects = { 
+                'somatic-singles': gameConfig.ploidy * gameConfig.nValue, 
+                'sex-singles': gameConfig.ploidy * gameConfig.nValue, 
+                'somatic-pairs': gameConfig.nValue, 
+                'sex-pairs': gameConfig.nValue, 
+                'sets-score': gameConfig.ploidy 
+            };
+            for (let id in selects) {
+                const el = document.getElementById(prefix + '-' + id); 
+                el.innerHTML = '<option value="-">?</option>';
+                for (let i = 0; i <= selects[id]; i++) { 
+                    const opt = document.createElement('option'); opt.value = i; opt.innerText = i; el.appendChild(opt); 
+                }
+                const newEl = el.cloneNode(true);
+                
+                // 系統性防呆：強制解除從上一局繼承下來的 disabled 狀態與顏色
+                newEl.disabled = false;
+                newEl.style.backgroundColor = '';
+                newEl.style.borderColor = '';
+                
+                el.parentNode.replaceChild(newEl, el);
+                newEl.addEventListener('change', () => checkAnswers(prefix));
+            }
+        }
+
+        function transitionToStage2() {
+            globalStage = 2;
+            currentScale = window.innerHeight < 900 ? 0.8 : 1; 
+            
+            const mGlass = document.getElementById('magnifying-glass'); const bgBright = document.getElementById('bg-layer-bright');
+            const nucWrapper = document.getElementById('nucleus-wrapper'); const scoreBoard1 = document.getElementById('score-board-s1');
+            const maleContainer = document.getElementById('male-container');
+
+            gsap.set(mGlass, { scale: 0.5, x: 0, y: 0, display: 'block', opacity: 1 });
+            gsap.timeline().to(nucWrapper, { scale: 0, opacity: 0, duration: 1, ease: "power2.in" }).to(scoreBoard1, { opacity: 0, duration: 0.5 }, "<").to(bgBright, { opacity: 1, duration: 1 }).fromTo(mGlass, { x: 0, y: 0, scale: 0.5 }, { x: 140, y: 180, scale: 1, duration: 1.5, ease: "power2.out" }).to(mGlass, { x: 120, y: 200, duration: 1, ease: "sine.inOut" }).to(mGlass, { scale: 25, opacity: 0, duration: 1.5, ease: "power4.in" }).to(bgBright, { opacity: 0, duration: 1.5 }, "<")
+              .call(() => { mGlass.style.display = 'none'; initStageGame('m'); setTimeout(() => { showMessage('💡 提示：在母細胞中「雙擊」成對染色體即可將其撕開！', 4000); }, 1000); })
+              .to(maleContainer, { display: 'flex', opacity: 1, scale: currentScale, duration: 1.2, ease: "back.out(1.2)" }, ">-0.2");
+        }
+
+        function initStageGame(gender) {
+            let data;
+            if (gameConfig.mode === '2n10') data = gender === 'm' ? maleChromosomesData : femaleChromosomesData;
+            if (gameConfig.mode === '2n12') data = gender === 'm' ? maleChromosomesData_2n12 : femaleChromosomesData_2n12;
+            
+            const mCellId = gender === 'm' ? 'mother-cell' : 'female-mother-cell';
+            const tCellId = gender === 'm' ? 'sperm-cell' : 'egg-cell';
+            
+            document.getElementById(mCellId).innerHTML = ''; document.getElementById(tCellId).innerHTML = '';
+            if(gender==='m'){ document.getElementById(mCellId).innerHTML = '<div class="cell-label mother-label-m">睪丸內的<br>生殖母細胞(體細胞)</div>'; }
+            else { document.getElementById(mCellId).innerHTML = '<div class="cell-label mother-label-f">卵巢內的<br>生殖母細胞(體細胞)</div>'; }
+
+            if(gender==='m') boardEntities = []; 
+            initDropdowns(gender);
+
+            const pairs = {};
+            for(let i=1; i<=gameConfig.nValue; i++) pairs[i.toString()] = [];
+            data.forEach(chrom => pairs[chrom.pair].push(chrom));
+
+            for (let pairId in pairs) {
+                const chrom1 = pairs[pairId][0]; const chrom2 = pairs[pairId][1];
+                const group = document.createElement('div'); group.className = 'drag-wrapper grouped snapped-effect'; group.dataset.pair = pairId;
+                const w = 54; const maxH = Math.max(chrom1.h, chrom2.h);
+                group.style.width = w + 'px'; group.style.height = maxH + 'px';
+
+                const v1 = createChromVisual(chrom1); const v2 = createChromVisual(chrom2);
+                v1.style.position = 'absolute'; v2.style.position = 'absolute'; v1.style.left = '0px'; v2.style.left = '30px'; v1.style.top = (maxH - chrom1.h) + 'px'; v2.style.top = (maxH - chrom2.h) + 'px';
+                group.appendChild(v1); group.appendChild(v2); document.getElementById(mCellId).appendChild(group);
+                
+                const angle = Math.random() * Math.PI * 2; const r = Math.random() * (MOTHER_RADIUS - 140);
+                const startX = MOTHER_RADIUS + r * Math.cos(angle) - (w/2); const startY = MOTHER_RADIUS + r * Math.sin(angle) - (maxH/2);
+                gsap.set(group, { x: startX, y: startY });
+
+                const entity = { el: group, pair: pairId, type: 'pair', gender: gender, items: [ { el: v1, id: chrom1.id, h: chrom1.h, type: chrom1.type }, { el: v2, id: chrom2.id, h: chrom2.h, type: chrom2.type } ], x: startX, y: startY, w: w, h: maxH, vx: (Math.random() - 0.5) * 0.15, vy: (Math.random() - 0.5) * 0.15, isDragging: false, container: mCellId, isFloating: true };
+                boardEntities.push(entity); bindMotherPairDrag(entity);
+            }
+        }
+
+        function executeSplitSeamlessS2(pairEntity, splitIndex, dragInstance) {
+            const mCellId = pairEntity.gender === 'm' ? 'mother-cell' : 'female-mother-cell';
+            const motherCell = document.getElementById(mCellId);
+            const remainingIndex = splitIndex === 0 ? 1 : 0;
+            const splitItem = pairEntity.items[splitIndex]; const remainingItem = pairEntity.items[remainingIndex]; const maxH = pairEntity.h;
+
+            const remWrapper = document.createElement('div'); remWrapper.className = 'drag-wrapper'; remWrapper.style.width = '24px'; remWrapper.style.height = remainingItem.h + 'px';
+            remainingItem.el.style.position = 'absolute'; remainingItem.el.style.left = '0px'; remainingItem.el.style.top = '0px'; 
+            remWrapper.appendChild(remainingItem.el); motherCell.appendChild(remWrapper);
+            
+            const remX = pairEntity.x + (remainingIndex * 30); const remY = pairEntity.y + (maxH - remainingItem.h); 
+            gsap.set(remWrapper, { x: remX, y: remY });
+
+            const remEntity = { el: remWrapper, id: remainingItem.id, pair: pairEntity.pair, h: remainingItem.h, gender: pairEntity.gender, x: remX, y: remY, w: 24, h: remainingItem.h, vx: (splitIndex === 0 ? 0.4 : -0.4), vy: (Math.random() > 0.5 ? 0.2 : -0.2), isDragging: false, container: mCellId, type: 'single', isFloating: true };
+            pairEntity.vx = (splitIndex === 0 ? -0.4 : 0.4); pairEntity.vy = (Math.random() > 0.5 ? 0.2 : -0.2);
+
+            boardEntities.push(remEntity); bindMotherSingleDrag(remEntity);
+
+            pairEntity.type = 'single'; pairEntity.id = splitItem.id; pairEntity.h = splitItem.h; pairEntity.w = 24;
+            pairEntity.el.style.width = '24px'; pairEntity.el.style.height = splitItem.h + 'px'; pairEntity.el.classList.remove('grouped');
+            splitItem.el.style.left = '0px'; splitItem.el.style.top = '0px';
+
+            const splitX = pairEntity.x + (splitIndex * 30); const splitY = pairEntity.y + (maxH - splitItem.h); 
+            pairEntity.x = splitX; pairEntity.y = splitY; gsap.set(pairEntity.el, { x: splitX, y: splitY }); dragInstance.update();
+        }
+
+        function bindMotherPairDrag(entity) {
+            Draggable.create(entity.el, {
+                bounds: window, 
+                onPress: function(e) {
+                    const now = Date.now(); const isDoubleClick = this.lastPressTime && (now - this.lastPressTime < 350); this.lastPressTime = now;
+                    entity.isDragging = true; gsap.set(this.target, { zIndex: 100000 }); 
+                    if (isDoubleClick && entity.type === 'pair') {
+                        const rect = entity.el.getBoundingClientRect(); const activeItemIndex = ((this.pointerX - rect.left) / currentScale) < 27 ? 0 : 1;
+                        this.endDrag(e); executeSplitSeamlessS2(entity, activeItemIndex, this); return;
+                    }
+                },
+                onDrag: function() { entity.x = this.x; entity.y = this.y; },
+                onRelease: function() { 
+                    entity.isDragging = false; gsap.set(this.target, { zIndex: 50 }); 
+                    if (entity.type === 'pair') {
+                        const mCellId = entity.gender === 'm' ? 'mother-cell' : 'female-mother-cell';
+                        const motherCell = document.getElementById(mCellId);
+                        const eRect = entity.el.getBoundingClientRect(); const mRect = motherCell.getBoundingClientRect();
+                        const eCx = eRect.left + eRect.width/2; const eCy = eRect.top + eRect.height/2;
+                        const mCx = mRect.left + mRect.width/2; const mCy = mRect.top + mRect.height/2;
+                        if (Math.hypot(eCx - mCx, eCy - mCy) > (MOTHER_RADIUS * currentScale)) {
+                            gsap.to(entity.el, { x: MOTHER_RADIUS - entity.w/2, y: MOTHER_RADIUS - entity.h/2, duration: 0.5, ease: "bounce.out" });
+                            entity.x = MOTHER_RADIUS - entity.w/2; entity.y = MOTHER_RADIUS - entity.h/2;
+                        }
+                    } else { checkDropDestination(entity, this); }
+                }
+            });
+        }
+
+        function bindMotherSingleDrag(entity) {
+            Draggable.create(entity.el, { bounds: window, onPress: function() { entity.isDragging = true; gsap.set(this.target, { zIndex: 100000 }); }, onDrag: function() { entity.x = this.x; entity.y = this.y; }, onRelease: function() { entity.isDragging = false; gsap.set(this.target, { zIndex: 50 }); checkDropDestination(entity, this); } });
+        }
+
+        function checkDropDestination(entity, dragInstance) {
+            const mCellId = entity.gender === 'm' ? 'mother-cell' : 'female-mother-cell';
+            const tCellId = entity.gender === 'm' ? 'sperm-cell' : 'egg-cell';
+            const motherCell = document.getElementById(mCellId); const targetCell = document.getElementById(tCellId);
+            
+            const eRect = entity.el.getBoundingClientRect(); const eCx = eRect.left + eRect.width/2; const eCy = eRect.top + eRect.height/2;
+            const tRect = targetCell.getBoundingClientRect(); const tCx = tRect.left + tRect.width/2; const tCy = tRect.top + tRect.height/2;
+            const mRect = motherCell.getBoundingClientRect(); const mCx = mRect.left + mRect.width/2; const mCy = mRect.top + mRect.height/2;
+            
+            if (Math.hypot(eCx - tCx, eCy - tCy) < (TARGET_RADIUS * currentScale)) {
+                const hasDuplicate = boardEntities.some(e => e.container === tCellId && e.pair === entity.pair);
+                if (hasDuplicate) {
+                    showMessage(entity.pair + ' 號已經有一條啦！', 2000);
+                    if(entity.el.parentNode !== motherCell) motherCell.appendChild(entity.el);
+                    const localX = (eRect.left - mRect.left)/currentScale; const localY = (eRect.top - mRect.top)/currentScale;
+                    gsap.set(entity.el, { x: localX, y: localY }); entity.isFloating = false; entity.vx = 0; entity.vy = 0;
+                    gsap.to(entity.el, { x: MOTHER_RADIUS - 12, y: MOTHER_RADIUS - (entity.h/2), duration: 0.6, ease: "bounce.out", onComplete: () => { entity.x = MOTHER_RADIUS - 12; entity.y = MOTHER_RADIUS - (entity.h/2); entity.vx = (Math.random() > 0.5 ? 1 : -1) * 0.15; entity.vy = (Math.random() > 0.5 ? 1 : -1) * 0.15; entity.container = mCellId; entity.isFloating = true; } });
+                    gsap.fromTo(targetCell, { boxShadow: "0 0 20px rgba(239, 68, 68, 0.8)" }, { boxShadow: "inset 0 0 30px rgba(0,0,0, 0.1)", duration: 0.5 });
+                } else {
+                    if(dragInstance) dragInstance.disable(); targetCell.appendChild(entity.el);
+                    const slotIndex = parseInt(entity.pair) - 1; 
+                    const targetX = 68 + (slotIndex * (200 / (gameConfig.nValue - 1))); 
+                    const targetY = 260 - entity.h; 
+                    const localX = (eRect.left - tRect.left)/currentScale; const localY = (eRect.top - tRect.top)/currentScale;
+                    gsap.set(entity.el, { x: localX, y: localY });
+                    gsap.to(entity.el, { x: targetX, y: targetY, duration: 0.3, ease: "power2.out", onComplete: () => { entity.el.classList.add('in-sperm'); }});
+                    entity.x = targetX; entity.y = targetY; entity.container = tCellId; entity.vx = 0; entity.vy = 0; entity.isFloating = false; 
+                    checkTargetCompleteness(entity.gender);
+                }
+            } else {
+                if(entity.el.parentNode !== motherCell) motherCell.appendChild(entity.el);
+                const localX = (eRect.left - mRect.left)/currentScale; const localY = (eRect.top - mRect.top)/currentScale;
+                if (Math.hypot(eCx - mCx, eCy - mCy) < (MOTHER_RADIUS * currentScale)) {
+                    gsap.set(entity.el, { x: localX, y: localY }); entity.x = localX; entity.y = localY; entity.vx = (Math.random() > 0.5 ? 1 : -1) * 0.15; entity.vy = (Math.random() > 0.5 ? 1 : -1) * 0.15; entity.container = mCellId; entity.isFloating = true;
+                } else {
+                    gsap.set(entity.el, { x: localX, y: localY }); entity.isFloating = false; entity.vx = 0; entity.vy = 0;
+                    gsap.to(entity.el, { x: MOTHER_RADIUS - 12, y: MOTHER_RADIUS - (entity.h/2), duration: 0.5, ease: "power2.out", onComplete: () => { entity.x = MOTHER_RADIUS - 12; entity.y = MOTHER_RADIUS - (entity.h/2); entity.vx = (Math.random() > 0.5 ? 1 : -1) * 0.15; entity.vy = (Math.random() > 0.5 ? 1 : -1) * 0.15; entity.container = mCellId; entity.isFloating = true; }});
+                }
+            }
+        }
+
+        function checkTargetCompleteness(gender) {
+            const tCellId = gender === 'm' ? 'sperm-cell' : 'egg-cell';
+            const boardId = gender === 'm' ? 'score-board-m' : 'score-board-f';
+            const targetElements = boardEntities.filter(e => e.container === tCellId);
+            if (targetElements.length === gameConfig.nValue) {
+                const targetCell = document.getElementById(tCellId);
+                gsap.to(targetCell, { boxShadow: "0 0 35px 10px rgba(250, 204, 21, 0.9)", duration: 0.3 });
+                gsap.fromTo(targetCell, { x: -5 }, { x: 5, duration: 0.08, repeat: 5, yoyo: true, onComplete: () => gsap.set(targetCell, { x: 0 }) });
+                
+                const board = document.getElementById(boardId);
+                board.style.pointerEvents = 'auto'; 
+                gsap.to(board, { opacity: 1, duration: 0.5 });
+
+                showMessage(gender === 'm' ? '✨ 請完成染色體數量確認！' : '✨ 請完成染色體數量確認！', 3000);
+            }
+        }
+
+        function triggerMotherCellQueue(gender) {
+            const mCellId = gender === 'm' ? 'mother-cell' : 'female-mother-cell';
+            const motherElements = boardEntities.filter(e => e.container === mCellId);
+            
+            motherElements.sort((a, b) => { 
+                if (a.pair == gameConfig.nValue && b.pair != gameConfig.nValue) return 1; 
+                if (b.pair == gameConfig.nValue && a.pair != gameConfig.nValue) return -1; 
+                return b.h - a.h; 
+            });
+            
+            const startX = 220 - ((gameConfig.nValue * 35) / 2);
+            motherElements.forEach((entity, idx) => {
+                entity.isFloating = false; entity.vx = 0; entity.vy = 0;
+                const dragInst = Draggable.get(entity.el); if (dragInst) dragInst.disable();
+                const targetX = startX + (idx * 35); 
+                const targetY = 360 - entity.h;
+                gsap.to(entity.el, { x: targetX, y: targetY, duration: 0.8, delay: 0.2 + (idx * 0.1), ease: "back.out(1.2)", onComplete: () => { entity.x = targetX; entity.y = targetY; entity.el.classList.add('in-sperm'); } });
+            });
+            
+            if(gender === 'm') { 
+                setTimeout(startStage3, 2000); 
+            } else if(gender === 'f') { 
+                setTimeout(() => { 
+                    document.getElementById('mating-btn').style.display = 'block'; 
+                    gsap.to('#mating-btn', {scale:1, duration: 0.8, ease: "elastic.out(1, 0.5)"}); 
+                }, 2000); 
+            }
+        }
+
+        function checkAnswers(gender) {
+            const somaticTarget = (gameConfig.nValue - 1).toString();
+            const answers = { 'somatic-singles': somaticTarget, 'sex-singles': '1', 'somatic-pairs': '0', 'sex-pairs': '0', 'sets-score': '1' };
+            
+            let allCorrect = true;
+            for (let id in answers) {
+                const el = document.getElementById(gender + '-' + id);
+                if (el.value === answers[id]) { el.style.backgroundColor = '#dcfce7'; el.style.borderColor = '#16a34a'; } 
+                else { allCorrect = false; if (el.value !== '-') { el.style.backgroundColor = '#fee2e2'; el.style.borderColor = '#ef4444'; } else { el.style.backgroundColor = ''; el.style.borderColor = ''; } }
+            }
+            if (allCorrect) { 
+                for (let id in answers) document.getElementById(gender + '-' + id).disabled = true;
+                showMessage('🏆 太完美了！', 2000); 
+                triggerMotherCellQueue(gender); 
+            }
+        }
+
+        function startStage3() {
+            globalStage = 3; 
+            currentScale = window.innerHeight < 900 ? 0.7 : 0.85; 
+            const maleContainer = document.getElementById('male-container');
+            const femaleContainer = document.getElementById('female-container');
+            const bg02 = document.getElementById('bg-female-02');
+            const bg02_2 = document.getElementById('bg-female-02-2');
+
+            gsap.to('#score-board-m', {opacity: 0, duration: 0.5});
+            gsap.to(['#bg-layer-dim', '#bg-layer-bright'], { width: '50%', duration: 1.5, ease: "power2.inOut" });
+
+            const tl = gsap.timeline();
+            tl.to(maleContainer, { left: '25%', scale: currentScale, duration: 1.5, ease: "power2.inOut" })
+              .to(bg02, { opacity: 1, duration: 1 }, "<0.5")
+              .to(bg02_2, { opacity: 1, duration: 1.5 }, ">0.5")
+              .to(bg02, { opacity: 0, duration: 0.5 }, "<")
+              .call(() => { initStageGame('f'); })
+              .to(femaleContainer, { left: '75%', scale: currentScale, opacity: 1, display: 'flex', duration: 1.2, ease: "back.out(1.2)" });
+        }
+
+        function startFertilization() {
+            gsap.to('#mating-btn', {scale:0, duration: 0.3, onComplete: () => document.getElementById('mating-btn').style.display = 'none'});
+            gsap.to('#score-board-f', {opacity: 0, duration: 0.5});
+            
+            const overlay = document.getElementById('mating-img-overlay');
+            overlay.style.display = 'block';
+            
+            const tl = gsap.timeline();
+            tl.to(overlay, { scale: 1, duration: 1, ease: "back.out(1.2)" })
+              .to(overlay, { rotation: 8, duration: 0.15, ease: "power1.inOut" })
+              .to(overlay, { rotation: -8, duration: 0.3, ease: "power1.inOut", yoyo: true, repeat: 5 })
+              .to(overlay, { rotation: 0, duration: 0.15, ease: "power1.inOut" })
+              .to(overlay, { scale: 0, duration: 0.8, ease: "back.in(1.2)", onComplete: () => { overlay.style.display = 'none'; gsap.set(overlay, {rotation: 0}); } })
+              .call(executeMovement);
+        }
+
+        function executeMovement() {
+            const spermWrapper = document.getElementById('sperm-wrapper');
+            const eggWrapper = document.getElementById('egg-wrapper');
+            
+            gsap.to(['#mother-cell', '#female-mother-cell', '.sperm-tail', '.mother-label-m', '.mother-label-f'], {opacity: 0, duration: 1});
+
+            const distance = (window.innerWidth * 0.25) / currentScale; 
+            gsap.to(spermWrapper, { x: distance, duration: 2, ease: "power2.inOut" });
+            gsap.to(eggWrapper, { x: -distance, duration: 2, ease: "power2.inOut" });
+
+            gsap.to(['#bg-layer-dim', '#bg-layer-bright'], { x: '-12vw', y: '-28vh', scaleX: -0.75, scaleY: 0.75, duration: 2, ease: "power2.inOut" });
+            gsap.to(['#bg-female-02', '#bg-female-02-2'], { x: '12vw', y: '-28vh', scale: 0.75, duration: 2, ease: "power2.inOut" });
+
+            setTimeout(executeFusion, 2000);
+        }
+
+        function executeFusion() {
+            const spermCell = document.getElementById('sperm-cell');
+            const eggCell = document.getElementById('egg-cell');
+            
+            const maleChroms = boardEntities.filter(e => e.container === 'sperm-cell');
+            const femaleChroms = boardEntities.filter(e => e.container === 'egg-cell');
+            let spermSexChrom = maleChroms.find(c => c.pair == gameConfig.nValue);
+            let isBoy = spermSexChrom.h === 106; 
+            
+            let babyImg = document.getElementById('baby-fly-img');
+            babyImg.style.backgroundImage = isBoy ? "url('03.png')" : "url('04.png')";
+            babyImg.style.display = 'block';
+            gsap.to(babyImg, { scale: 0.7, duration: 1.5, ease: "back.out(1.2)" });
+
+            gsap.to(spermCell, {opacity: 0, duration: 1});
+            
+            gsap.to(eggCell, { scale: 1.8, boxShadow: "0 0 50px 20px rgba(168, 85, 247, 0.6), inset 0 0 30px rgba(244, 63, 94, 0.2)", duration: 1.5 });
+            document.querySelector('.egg-label').innerText = '受精卵';
+            gsap.to('.egg-label', {y: -100, scale: 1.3, duration: 1});
+
+            maleChroms.forEach(c => {
+                eggCell.appendChild(c.el); c.container = 'egg-cell';
+                gsap.set(c.el, { x: 148, y: 148 }); 
+            });
+
+            for (let i = 1; i <= gameConfig.nValue; i++) {
+                const mC = maleChroms.find(c => c.pair == i);
+                const fC = femaleChroms.find(c => c.pair == i);
+                
+                const mTargetX = 20 + (i - 1) * (240 / (gameConfig.nValue - 1));
+                const fTargetX = mTargetX + 28; 
+                const targetY = 160 - (mC.h / 2);     
+
+                gsap.set([mC.el, fC.el], { zIndex: 100 });
+                gsap.to(mC.el, { x: mTargetX, y: targetY, scale: 0.5, duration: 1.5, delay: i * 0.15, ease: "back.out(1.2)" });
+                gsap.to(fC.el, { x: fTargetX, y: targetY, scale: 0.5, duration: 1.5, delay: i * 0.15, ease: "back.out(1.2)" });
+            }
+
+            setTimeout(() => {
+                showMessage('✨ 生命的奇蹟：重新配對！<br><span style="font-size:1.2rem; color:#fde047;">同源染色體：一條來自父方，一條來自母方</span>', 3000);
+            }, 2500);
+
+            setTimeout(() => {
+                for (let i = 1; i <= gameConfig.nValue; i++) {
+                    const mC = maleChroms.find(c => c.pair == i);
+                    const fC = femaleChroms.find(c => c.pair == i);
+                    
+                    const group = document.createElement('div');
+                    group.className = 'drag-wrapper grouped snapped-effect';
+                    group.style.zIndex = '100';
+
+                    const maxH = Math.max(mC.h, fC.h);
+                    group.style.width = '52px'; 
+                    group.style.height = maxH + 'px';
+                    
+                    const mRot = mC.el.firstChild; const fRot = fC.el.firstChild;
+                    mRot.style.position = 'absolute'; mRot.style.left = '0px'; mRot.style.top = (maxH - mC.h) + 'px';
+                    fRot.style.position = 'absolute'; fRot.style.left = '28px'; fRot.style.top = (maxH - fC.h) + 'px';
+                    group.appendChild(mRot); group.appendChild(fRot);
+                    eggCell.appendChild(group);
+                    
+                    gsap.set(group, {x: mC.x, y: mC.y - (maxH - mC.h), scale: 0.5});
+                    
+                    const groupEntity = {
+                        el: group, type: 'pair', container: 'egg-cell', isFloating: true,
+                        x: mC.x, y: mC.y - (maxH - mC.h), w: 52, h: maxH,
+                        vx: (Math.random() - 0.5) * 0.5, vy: (Math.random() - 0.5) * 0.5,
+                        pair: i, mRot: mRot, fRot: fRot, mH: mC.h, fH: fC.h
+                    };
+                    boardEntities.push(groupEntity);
+                }
+                boardEntities = boardEntities.filter(e => e.container !== 'egg-cell' || e.type === 'pair');
+                maleChroms.forEach(c => c.el.remove()); femaleChroms.forEach(c => c.el.remove());
+                showMessage('💞 同源染色體分離中...', 3000);
+            }, 5500);
+
+            setTimeout(() => {
+                const pairs = boardEntities.filter(e => e.container === 'egg-cell' && e.type === 'pair');
+                pairs.forEach(p => {
+                    const mWrapper = document.createElement('div'); mWrapper.className = 'drag-wrapper';
+                    mWrapper.style.width = '24px'; mWrapper.style.height = p.mH + 'px'; mWrapper.style.zIndex = '100';
+                    p.mRot.style.left = '0px'; p.mRot.style.top = '0px';
+                    mWrapper.appendChild(p.mRot); eggCell.appendChild(mWrapper);
+                    
+                    const fWrapper = document.createElement('div'); fWrapper.className = 'drag-wrapper';
+                    fWrapper.style.width = '24px'; fWrapper.style.height = p.fH + 'px'; fWrapper.style.zIndex = '100';
+                    p.fRot.style.left = '0px'; p.fRot.style.top = '0px';
+                    fWrapper.appendChild(p.fRot); eggCell.appendChild(fWrapper);
+                    
+                    const startMX = p.x; const startMY = p.y + (p.h - p.mH);
+                    const startFX = p.x + 28; const startFY = p.y + (p.h - p.fH);
+                    
+                    gsap.set(mWrapper, {x: startMX, y: startMY, scale: 0.5});
+                    gsap.set(fWrapper, {x: startFX, y: startFY, scale: 0.5});
+                    
+                    const mEntity = {el: mWrapper, h: p.mH, w: 24, x: startMX, y: startMY, vx: 0, vy: 0, isFloating: false, container: 'egg-cell', type: 'single'};
+                    const fEntity = {el: fWrapper, h: p.fH, w: 24, x: startFX, y: startFY, vx: 0, vy: 0, isFloating: false, container: 'egg-cell', type: 'single'};
+                    boardEntities.push(mEntity, fEntity);
+                    
+                    gsap.to(mWrapper, {
+                        x: startMX - 30, duration: 2, ease: "power2.out",
+                        onUpdate: () => mEntity.x = gsap.getProperty(mWrapper, "x"),
+                        onComplete: () => { mEntity.vx = (Math.random() * -0.3) - 0.2; mEntity.vy = (Math.random() - 0.5) * 0.5; mEntity.isFloating = true; }
+                    });
+                    
+                    gsap.to(fWrapper, {
+                        x: startFX + 30, duration: 2, ease: "power2.out",
+                        onUpdate: () => fEntity.x = gsap.getProperty(fWrapper, "x"),
+                        onComplete: () => { fEntity.vx = (Math.random() * 0.3) + 0.2; fEntity.vy = (Math.random() - 0.5) * 0.5; fEntity.isFloating = true; }
+                    });
+                });
+                
+                boardEntities = boardEntities.filter(e => e.container !== 'egg-cell' || e.type !== 'pair');
+                pairs.forEach(p => p.el.remove());
+                showMessage('✨ 染色體各自分離！', 3000);
+                
+                setTimeout(() => {
+                    document.getElementById('next-level-overlay').style.display = 'flex';
+                    gsap.fromTo('#next-level-overlay .menu-box', {scale: 0.5, opacity: 0}, {scale: 1, opacity: 1, duration: 0.8, ease: "back.out(1.2)"});
+                }, 3500);
+
+            }, 8500);
+        }
+
+        function updatePhysics() {
+            for (let i = 0; i < boardEntities.length; i++) {
+                for (let j = i + 1; j < boardEntities.length; j++) {
+                    const e1 = boardEntities[i]; const e2 = boardEntities[j];
+                    if (e1.container !== e2.container) continue;
+                    if (!e1.isFloating && !e2.isFloating) continue; 
+                    if (e1.isDragging || e2.isDragging) continue;
+
+                    const scaleMult = (globalStage === 3 && e1.container === 'egg-cell') ? 0.5 : 1;
+                    
+                    const r1 = Math.max(15, e1.w * 0.5, e1.h * 0.35) * scaleMult; 
+                    const r2 = Math.max(15, e2.w * 0.5, e2.h * 0.35) * scaleMult;
+                    
+                    const c1x = e1.x + e1.w / 2; const c1y = e1.y + e1.h / 2; 
+                    const c2x = e2.x + e2.w / 2; const c2y = e2.y + e2.h / 2;
+                    const dx = c2x - c1x; const dy = c2y - c1y; const dist = Math.hypot(dx, dy); const minDist = r1 + r2;
+
+                    if (dist < minDist && dist > 0) {
+                        const nx = dx / dist; const ny = dy / dist; const overlap = minDist - dist;
+                        if (e1.isFloating && e2.isFloating) {
+                            e1.x -= nx * overlap / 2; e1.y -= ny * overlap / 2; e2.x += nx * overlap / 2; e2.y += ny * overlap / 2;
+                            const dv = (e1.vx * nx + e1.vy * ny) - (e2.vx * nx + e2.vy * ny); e1.vx -= dv * nx; e1.vy -= dv * ny; e2.vx += dv * nx; e2.vy += dv * ny;
+                        } else if (e1.isFloating && !e2.isFloating) {
+                            e1.x -= nx * overlap; e1.y -= ny * overlap; const dot = e1.vx * nx + e1.vy * ny; if (dot > 0) { e1.vx -= 2 * dot * nx; e1.vy -= 2 * dot * ny; }
+                        } else if (!e1.isFloating && e2.isFloating) {
+                            e2.x += nx * overlap; e2.y += ny * overlap; const dot = e2.vx * nx + e2.vy * ny; if (dot < 0) { e2.vx -= 2 * dot * nx; e2.vy -= 2 * dot * ny; }
+                        }
+                    }
+                }
+            }
+
+            boardEntities.forEach(entity => {
+                if (entity.isDragging || !entity.isFloating) return; 
+                entity.x += entity.vx; entity.y += entity.vy;
+                
+                const radius = (entity.container === 'nucleus') ? NUCLEUS_RADIUS : (entity.container.includes('mother') ? MOTHER_RADIUS : TARGET_RADIUS);
+                const scaleMult = (globalStage === 3 && entity.container === 'egg-cell') ? 0.5 : 1;
+                
+                const cx = entity.x + (entity.w / 2); const cy = entity.y + (entity.h / 2); const dx = cx - radius; const dy = cy - radius;
+                const dist = Math.hypot(dx, dy); const collisionRadius = (entity.h / 2) * scaleMult; 
+
+                if (dist + collisionRadius > radius) {
+                    const nx = dx / dist; const ny = dy / dist; const dotProduct = entity.vx * nx + entity.vy * ny;
+                    if (dotProduct > 0) { entity.vx -= 2 * dotProduct * nx; entity.vy -= 2 * dotProduct * ny; }
+                    const overlap = (dist + collisionRadius) - radius; entity.x -= nx * overlap; entity.y -= ny * overlap;
+                }
+                gsap.set(entity.el, { x: entity.x, y: entity.y });
+            });
+            requestAnimationFrame(updatePhysics);
+        }
+    </script>
+</body>
+</html>
