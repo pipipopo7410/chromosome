@@ -100,7 +100,7 @@
             box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 5; pointer-events: none; white-space: nowrap;
         }
         .mother-label-m { top: -25px; background: rgba(254, 240, 138, 0.85); border: 2px solid #f59e0b; color: #9a3412; }
-        .sperm-label { top: -25px; background: rgba(219, 234, 254, 0.85); border: 2px solid #60a5fa; color: #1e3a8a; }
+        .sperm-label { top: -25px; background: rgba(219, 234, 254, 0.85); border: 2px solid #60a5fa; color: #1e3a8a; transition: opacity 0.5s; }
         .mother-label-f { top: -25px; background: rgba(254, 205, 211, 0.85); border: 2px solid #f43f5e; color: #881337; }
         .egg-label { top: -25px; background: rgba(253, 232, 232, 0.85); border: 2px solid #fb7185; color: #9f1239; }
 
@@ -128,12 +128,13 @@
             100% { transform: translateY(-50%) rotate(-4deg) scaleX(1.05); clip-path: polygon(0 0, 25% 20%, 50% 0, 75% 20%, 100% 0, 100% 80%, 75% 100%, 50% 80%, 25% 100%, 0 80%); }
         }
 
+        /* 🔥 計數器加寬至 340px，並利用 margin-bottom 創造間隔 */
         .score-board-s2 {
             position: absolute; top: 50%; transform: translateY(-50%);
             background: rgba(255,255,255,0.95); color: #334155; padding: 25px 30px; border-radius: 16px;
-            font-size: 1.25rem; font-weight: bold; width: 320px; box-sizing: border-box;
+            font-size: 1.25rem; font-weight: bold; width: 340px; box-sizing: border-box;
             box-shadow: 0 10px 25px rgba(0,0,0,0.15); border: 2px solid #e2e8f0; 
-            display: flex; flex-direction: column; gap: 15px; backdrop-filter: blur(5px);
+            display: flex; flex-direction: column; gap: 10px; backdrop-filter: blur(5px);
             opacity: 0; pointer-events: none; transition: opacity 0.5s; z-index: 10;
         }
         #score-board-m { right: calc(100% + 100px); } 
@@ -249,7 +250,7 @@
 
     <div id="male-container" class="stage-container">
         <div id="mother-cell" class="mother-cell">
-            <div class="cell-label mother-label-m">睪丸內的<br>生殖母細胞(體細胞)</div>
+            <div class="cell-label mother-label-m">睪丸內的<br>生殖母細胞<br>(體細胞)</div>
         </div>
         <div id="sperm-wrapper" class="target-wrapper">
             <div class="sperm-tail"></div>
@@ -257,11 +258,11 @@
             <div id="sperm-cell"></div>
             
             <div id="score-board-m" class="score-board-s2">
-                <div style="font-size: 1.1rem; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 5px; color: #1e3a8a;">精子內點名確認</div>
+                <div style="font-size: 1.2rem; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 5px; color: #1e3a8a;">精子內有</div>
                 <div class="score-item-s2"><div><span class="highlight-somatic">體</span>染色體：</div><div><select id="m-somatic-singles"></select> 條</div></div>
-                <div class="score-item-s2"><div><span class="highlight-sex">性</span>染色體：</div><div><select id="m-sex-singles"></select> 條</div></div>
+                <div class="score-item-s2" style="margin-bottom: 15px;"><div><span class="highlight-sex">性</span>染色體：</div><div><select id="m-sex-singles"></select> 條</div></div>
                 <div class="score-item-s2"><div><span class="highlight-somatic">體</span>染色體：</div><div><select id="m-somatic-pairs"></select> 對</div></div>
-                <div class="score-item-s2"><div><span class="highlight-sex">性</span>染色體：</div><div><select id="m-sex-pairs"></select> 對</div></div>
+                <div class="score-item-s2" style="margin-bottom: 15px;"><div><span class="highlight-sex">性</span>染色體：</div><div><select id="m-sex-pairs"></select> 對</div></div>
                 <div class="score-item-s2"><div>染色體套數：</div><div><select id="m-sets-score"></select> 套</div></div>
             </div>
         </div>
@@ -269,18 +270,18 @@
 
     <div id="female-container" class="stage-container">
         <div id="female-mother-cell" class="mother-cell">
-            <div class="cell-label mother-label-f">卵巢內的<br>生殖母細胞(體細胞)</div>
+            <div class="cell-label mother-label-f">卵巢內的<br>生殖母細胞<br>(體細胞)</div>
         </div>
         <div id="egg-wrapper" class="target-wrapper">
             <div class="cell-label egg-label">卵子<br>(生殖細胞)</div>
             <div id="egg-cell"></div>
             
             <div id="score-board-f" class="score-board-s2">
-                <div style="font-size: 1.1rem; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 5px; color: #9f1239;">卵子內點名確認</div>
+                <div style="font-size: 1.2rem; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 5px; color: #9f1239;">卵子內有</div>
                 <div class="score-item-s2"><div><span class="highlight-somatic">體</span>染色體：</div><div><select id="f-somatic-singles"></select> 條</div></div>
-                <div class="score-item-s2"><div><span class="highlight-sex">性</span>染色體：</div><div><select id="f-sex-singles"></select> 條</div></div>
+                <div class="score-item-s2" style="margin-bottom: 15px;"><div><span class="highlight-sex">性</span>染色體：</div><div><select id="f-sex-singles"></select> 條</div></div>
                 <div class="score-item-s2"><div><span class="highlight-somatic">體</span>染色體：</div><div><select id="f-somatic-pairs"></select> 對</div></div>
-                <div class="score-item-s2"><div><span class="highlight-sex">性</span>染色體：</div><div><select id="f-sex-pairs"></select> 對</div></div>
+                <div class="score-item-s2" style="margin-bottom: 15px;"><div><span class="highlight-sex">性</span>染色體：</div><div><select id="f-sex-pairs"></select> 對</div></div>
                 <div class="score-item-s2"><div>染色體套數：</div><div><select id="f-sets-score"></select> 套</div></div>
             </div>
         </div>
@@ -434,7 +435,7 @@
         function transitionToPairs() {
             currentMode = 'pairs'; setUIActiveS1('pairs');
             const unit = gameConfig.ploidy === 3 ? '組' : '對';
-            showMessage(` 請找出同源染色體！`, 3000);
+            showMessage(`這隻果蠅有幾${unit}染色體？<br><span style="font-size:1.1rem; color:#fde047;">(同源染色體靠近即可配對)</span>`, 3000);
             
             boardEntities.forEach(e => {
                 e.isFloating = false; 
@@ -456,7 +457,7 @@
 
         function transitionToSets() {
             currentMode = 'sets'; setUIActiveS1('sets');
-            showMessage(`請將染色體組裝成套！`, 3000);
+            showMessage(`這隻果蠅有幾套染色體？<br><span style="font-size:1.1rem; color:#fde047;">(染色體靠近即可組裝成套)</span>`, 3000);
             const currentGroups = [...boardEntities]; boardEntities = []; 
             
             currentGroups.forEach(group => {
@@ -514,7 +515,7 @@
 
                             const maxSingles = gameConfig.ploidy * gameConfig.nValue;
                             if (singlesScore === maxSingles) { 
-                                showMessage(`🎉 ${maxSingles}條染色體清點完成！`, 2500); 
+                                showMessage(`🎉 這隻果蠅有${maxSingles}條染色體`, 2500); 
                                 setTimeout(transitionToPairs, 2500); 
                             }
                         }
@@ -582,14 +583,14 @@
                     const unit = gameConfig.ploidy === 3 ? '組' : '對';
                     showFloatingCombo('nucleus', avgX + 15, avgY - 40, '+1 ' + unit, '#16a34a');
                     if(pairsScore === gameConfig.nValue) { 
-                        showMessage(`🎉 ${gameConfig.nValue}${unit}同源配對完成！`, 2500); 
+                        showMessage(`🎉 這隻果蠅有${gameConfig.nValue}${unit}染色體`, 2500); 
                         setTimeout(transitionToSets, 2500); 
                     }
                 } else {
                     setsScore++; document.querySelector('#score-sets span.num').innerText = setsScore;
                     showFloatingCombo('nucleus', avgX + newW/2 - 20, avgY - 40, '+1 套', '#3b82f6');
                     if(setsScore === gameConfig.ploidy) { 
-                        showMessage(`🏆 ${gameConfig.ploidy}套打包完成！`, 2500); 
+                        showMessage(`🏆 這隻果蠅有${gameConfig.ploidy}套染色體`, 2500); 
                         
                         if (gameConfig.mode === '3n12') {
                             setTimeout(() => {
@@ -651,17 +652,16 @@
             gsap.set('#mating-img-overlay', { display: 'none', scale: 0 });
             gsap.set('#baby-fly-img', { display: 'none', scale: 0 });
             
-            // 系統防呆：嚴格重置計分板鎖定狀態
             gsap.set('#score-board-m', { pointerEvents: 'none', opacity: 0 });
             gsap.set('#score-board-f', { pointerEvents: 'none', opacity: 0 });
 
             gsap.set('#sperm-wrapper', { x: 0 });
             gsap.set('#egg-wrapper', { x: 0 });
-            gsap.set('#sperm-cell', { opacity: 1, boxShadow: "inset 0 0 30px rgba(59, 130, 246, 0.1), 0 5px 15px rgba(59, 130, 246, 0.05)" });
-            gsap.set('#egg-cell', { scale: 1, opacity: 1, boxShadow: "inset 0 0 30px rgba(244, 63, 94, 0.1), 0 5px 15px rgba(244, 63, 94, 0.05)" });
-            gsap.set(['#mother-cell', '#female-mother-cell', '.sperm-tail', '.mother-label-m', '.mother-label-f'], { opacity: 1 });
+            gsap.set('#sperm-cell', { opacity: 1, display: 'block', boxShadow: "inset 0 0 30px rgba(59, 130, 246, 0.1), 0 5px 15px rgba(59, 130, 246, 0.05)" });
+            gsap.set('#egg-cell', { scale: 1, opacity: 1, display: 'block', boxShadow: "inset 0 0 30px rgba(244, 63, 94, 0.1), 0 5px 15px rgba(244, 63, 94, 0.05)" });
+            gsap.set(['#mother-cell', '#female-mother-cell', '.sperm-tail', '.mother-label-m', '.mother-label-f', '.sperm-label'], { opacity: 1, display: 'block' });
             gsap.set('.egg-label', { y: 0, scale: 1 });
-            document.querySelector('.egg-label').innerText = '生殖細胞(卵子)';
+            document.querySelector('.egg-label').innerText = '卵子\n(生殖細胞)';
 
             currentMode = 'singles';
             setUIActiveS1('singles');
@@ -685,7 +685,6 @@
                 }
                 const newEl = el.cloneNode(true);
                 
-                // 系統性防呆：強制解除從上一局繼承下來的 disabled 狀態與顏色
                 newEl.disabled = false;
                 newEl.style.backgroundColor = '';
                 newEl.style.borderColor = '';
@@ -705,7 +704,7 @@
 
             gsap.set(mGlass, { scale: 0.5, x: 0, y: 0, display: 'block', opacity: 1 });
             gsap.timeline().to(nucWrapper, { scale: 0, opacity: 0, duration: 1, ease: "power2.in" }).to(scoreBoard1, { opacity: 0, duration: 0.5 }, "<").to(bgBright, { opacity: 1, duration: 1 }).fromTo(mGlass, { x: 0, y: 0, scale: 0.5 }, { x: 140, y: 180, scale: 1, duration: 1.5, ease: "power2.out" }).to(mGlass, { x: 120, y: 200, duration: 1, ease: "sine.inOut" }).to(mGlass, { scale: 25, opacity: 0, duration: 1.5, ease: "power4.in" }).to(bgBright, { opacity: 0, duration: 1.5 }, "<")
-              .call(() => { mGlass.style.display = 'none'; initStageGame('m'); setTimeout(() => { showMessage('💡 提示：在母細胞中「雙擊」成對染色體即可將其撕開！', 4000); }, 1000); })
+              .call(() => { mGlass.style.display = 'none'; initStageGame('m'); setTimeout(() => { showMessage('💡 提示：在母細胞中「雙擊」同源染色體即可將其拆開！', 4000); }, 1000); })
               .to(maleContainer, { display: 'flex', opacity: 1, scale: currentScale, duration: 1.2, ease: "back.out(1.2)" }, ">-0.2");
         }
 
@@ -718,8 +717,8 @@
             const tCellId = gender === 'm' ? 'sperm-cell' : 'egg-cell';
             
             document.getElementById(mCellId).innerHTML = ''; document.getElementById(tCellId).innerHTML = '';
-            if(gender==='m'){ document.getElementById(mCellId).innerHTML = '<div class="cell-label mother-label-m">睪丸內的<br>生殖母細胞(體細胞)</div>'; }
-            else { document.getElementById(mCellId).innerHTML = '<div class="cell-label mother-label-f">卵巢內的<br>生殖母細胞(體細胞)</div>'; }
+            if(gender==='m'){ document.getElementById(mCellId).innerHTML = '<div class="cell-label mother-label-m">睪丸內的<br>生殖母細胞<br>(體細胞)</div>'; }
+            else { document.getElementById(mCellId).innerHTML = '<div class="cell-label mother-label-f">卵巢內的<br>生殖母細胞<br>(體細胞)</div>'; }
 
             if(gender==='m') boardEntities = []; 
             initDropdowns(gender);
@@ -860,7 +859,7 @@
                 board.style.pointerEvents = 'auto'; 
                 gsap.to(board, { opacity: 1, duration: 0.5 });
 
-                showMessage(gender === 'm' ? '✨ 請完成染色體數量確認！' : '✨ 請完成染色體數量確認！', 3000);
+                showMessage(gender === 'm' ? '精子內有多少染色體呢？' : '卵子內有多少染色體呢？', 3000);
             }
         }
 
@@ -887,6 +886,7 @@
                 setTimeout(startStage3, 2000); 
             } else if(gender === 'f') { 
                 setTimeout(() => { 
+                    gsap.to('#female-mother-cell', { opacity: 0, duration: 1 }); // 女方母細胞提早淡出
                     document.getElementById('mating-btn').style.display = 'block'; 
                     gsap.to('#mating-btn', {scale:1, duration: 0.8, ease: "elastic.out(1, 0.5)"}); 
                 }, 2000); 
@@ -910,6 +910,7 @@
             }
         }
 
+        // ---------- 第三階段 (雌性與受精交尾) ----------
         function startStage3() {
             globalStage = 3; 
             currentScale = window.innerHeight < 900 ? 0.7 : 0.85; 
@@ -919,7 +920,10 @@
             const bg02_2 = document.getElementById('bg-female-02-2');
 
             gsap.to('#score-board-m', {opacity: 0, duration: 0.5});
-            gsap.to(['#bg-layer-dim', '#bg-layer-bright'], { width: '50%', duration: 1.5, ease: "power2.inOut" });
+            
+            // 🔥 公蒼蠅母細胞提早淡出，並將公蒼蠅底圖提早翻轉 facing center
+            gsap.to('#mother-cell', { opacity: 0, duration: 1 });
+            gsap.to(['#bg-layer-dim', '#bg-layer-bright'], { width: '50%', scaleX: -1, duration: 1.5, ease: "power2.inOut" });
 
             const tl = gsap.timeline();
             tl.to(maleContainer, { left: '25%', scale: currentScale, duration: 1.5, ease: "power2.inOut" })
@@ -950,12 +954,18 @@
             const spermWrapper = document.getElementById('sperm-wrapper');
             const eggWrapper = document.getElementById('egg-wrapper');
             
-            gsap.to(['#mother-cell', '#female-mother-cell', '.sperm-tail', '.mother-label-m', '.mother-label-f'], {opacity: 0, duration: 1});
+            // 🔥 精確移除殘骸 (隱藏母細胞標籤、鞭毛、精子標籤)
+            gsap.to(['.sperm-tail', '.mother-label-m', '.mother-label-f', '.sperm-label'], {
+                opacity: 0, duration: 1, 
+                onComplete: () => { document.querySelectorAll('.sperm-tail, .mother-label-m, .mother-label-f, .sperm-label').forEach(el => el.style.display = 'none'); }
+            });
 
             const distance = (window.innerWidth * 0.25) / currentScale; 
-            gsap.to(spermWrapper, { x: distance, duration: 2, ease: "power2.inOut" });
+            // 🔥 精子往中心靠，但「微偏左 40px」，不與卵子重疊
+            gsap.to(spermWrapper, { x: distance - 40, duration: 2, ease: "power2.inOut" });
             gsap.to(eggWrapper, { x: -distance, duration: 2, ease: "power2.inOut" });
 
+            // 公蒼蠅已經 scaleX: -1 (翻轉過)，此處我們將其縮放成 -0.75 保持翻轉狀態，並移往左上
             gsap.to(['#bg-layer-dim', '#bg-layer-bright'], { x: '-12vw', y: '-28vh', scaleX: -0.75, scaleY: 0.75, duration: 2, ease: "power2.inOut" });
             gsap.to(['#bg-female-02', '#bg-female-02-2'], { x: '12vw', y: '-28vh', scale: 0.75, duration: 2, ease: "power2.inOut" });
 
@@ -976,15 +986,22 @@
             babyImg.style.display = 'block';
             gsap.to(babyImg, { scale: 0.7, duration: 1.5, ease: "back.out(1.2)" });
 
-            gsap.to(spermCell, {opacity: 0, duration: 1});
+            // 🔥 徹底移除精子虛線圈
+            gsap.to(spermCell, { opacity: 0, duration: 1, onComplete: () => spermCell.style.display = 'none' });
             
             gsap.to(eggCell, { scale: 1.8, boxShadow: "0 0 50px 20px rgba(168, 85, 247, 0.6), inset 0 0 30px rgba(244, 63, 94, 0.2)", duration: 1.5 });
             document.querySelector('.egg-label').innerText = '受精卵';
             gsap.to('.egg-label', {y: -100, scale: 1.3, duration: 1});
 
+            // 🔥 無縫 DOM 移轉 (解決精卵未重疊時的座標問題)
             maleChroms.forEach(c => {
-                eggCell.appendChild(c.el); c.container = 'egg-cell';
-                gsap.set(c.el, { x: 148, y: 148 }); 
+                const rect = c.el.getBoundingClientRect();
+                eggCell.appendChild(c.el); 
+                c.container = 'egg-cell';
+                const eggRect = eggCell.getBoundingClientRect();
+                const localX = (rect.left - eggRect.left) / currentScale; 
+                const localY = (rect.top - eggRect.top) / currentScale;
+                gsap.set(c.el, { x: localX, y: localY });
             });
 
             for (let i = 1; i <= gameConfig.nValue; i++) {
@@ -1035,7 +1052,7 @@
                 }
                 boardEntities = boardEntities.filter(e => e.container !== 'egg-cell' || e.type === 'pair');
                 maleChroms.forEach(c => c.el.remove()); femaleChroms.forEach(c => c.el.remove());
-                showMessage('💞 同源染色體分離中...', 3000);
+                showMessage('💞 同源染色體配對漂移中...', 3000);
             }, 5500);
 
             setTimeout(() => {
