@@ -128,7 +128,6 @@
             100% { transform: translateY(-50%) rotate(-4deg) scaleX(1.05); clip-path: polygon(0 0, 25% 20%, 50% 0, 75% 20%, 100% 0, 100% 80%, 75% 100%, 50% 80%, 25% 100%, 0 80%); }
         }
 
-        /* 🔥 計數器加寬至 340px，並利用 margin-bottom 創造間隔 */
         .score-board-s2 {
             position: absolute; top: 50%; transform: translateY(-50%);
             background: rgba(255,255,255,0.95); color: #334155; padding: 25px 30px; border-radius: 16px;
@@ -341,7 +340,7 @@
         const NUCLEUS_RADIUS = 300; const MOTHER_RADIUS = 220; const TARGET_RADIUS = 160;  
         let boardEntities = []; let isPhysicsRunning = false;
         let messageTimeout;
-        let stageTransitionTimeout; // 新增：用於控制進關卡前的倒數計時，方便拆解時取消
+        let isTransitioning = false; // 新增：用於鎖定破關過場期間的操作
 
         function showMessage(text, duration = 3000) {
             const msg = document.getElementById('center-message');
@@ -428,7 +427,13 @@
                 const angle = Math.random() * Math.PI * 2; const r = Math.random() * (NUCLEUS_RADIUS - 130);
                 const startX = NUCLEUS_RADIUS + r * Math.cos(angle) - 12; const startY = NUCLEUS_RADIUS + r * Math.sin(angle) - (chrom.h / 2);
                 gsap.set(wrapper, { x: startX, y: startY });
-                const entity = { el: wrapper, id: chrom.id, pair: chrom.pair, h: chrom.h, included: [{ id: chrom.id, pair: chrom.pair, h: chrom.h, layerEl: rotateLayer }], x: startX, y: startY, w: 24, h: chrom.h, vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3, isDragging: false, isFloating: true, container: 'nucleus', isCounted: false };
+                const entity = { 
+                    el: wrapper, id: chrom.id, pair: chrom.pair, h: chrom.h, 
+                    included: [{ id: chrom.id, pair: chrom.pair, h: chrom.h, layerEl: rotateLayer }], 
+                    x: startX, y: startY, w: 24, h: chrom.h, 
+                    vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3, 
+                    isDragging: false, isFloating: true, container: 'nucleus', isCounted: false 
+                };
                 boardEntities.push(entity); bindDragS1(entity);
             });
         }
@@ -458,7 +463,6 @@
 
         function transitionToSets() {
             currentMode = 'sets'; setUIActiveS1('sets');
-            // 加入拆解機制的引導提示
             showMessage(`這隻果蠅有幾套染色體？<br><span style="font-size:1.1rem; color:#fde047;">(靠近可組裝成套，拼錯可「雙擊」拆解重組)</span>`, 4000);
             const currentGroups = [...boardEntities]; boardEntities = []; 
             
@@ -502,14 +506,15 @@
             });
         }
 
-        // 新增的拆解功能：把錯誤組裝的群組打散
+        // 修改：放射狀炸開與加入冷卻時間
         function ungroupSetS1(groupEntity) {
             const nucleus = document.getElementById('nucleus');
-            
-            // 從畫板實體清單中移除這個群組
             boardEntities = boardEntities.filter(e => e.id !== groupEntity.id);
 
-            // 將群組內的染色體重新生成為獨立物件
+            // 計算群組中心點，讓染色體從中心往外炸開
+            const cx = groupEntity.x + (groupEntity.w / 2) - 12; 
+            const cy = groupEntity.y + (groupEntity.h / 2);
+
             groupEntity.included.forEach((item, idx) => {
                 const wrapper = document.createElement('div');
                 wrapper.className = 'drag-wrapper'; 
@@ -522,31 +527,31 @@
                 wrapper.appendChild(item.layerEl);
                 nucleus.appendChild(wrapper);
                 
-                // 設定初始座標為原群組的位置附近
-                const startX = groupEntity.x + (idx * 30);
-                const startY = groupEntity.y + (groupEntity.h - item.h);
+                // 放射狀排列角度與散開起點
+                const angle = (idx / groupEntity.included.length) * Math.PI * 2;
+                const startX = cx + Math.cos(angle) * 20;
+                const startY = cy - (item.h / 2) + Math.sin(angle) * 20;
                 gsap.set(wrapper, { x: startX, y: startY });
                 
                 const newEntity = {
                     el: wrapper, id: item.id, pair: item.pair, h: item.h,
                     included: [item], x: startX, y: startY, w: 24, h: item.h,
-                    vx: (Math.random() - 0.5) * 2, vy: (Math.random() - 0.5) * 2, // 彈開效果
+                    vx: Math.cos(angle) * 5, vy: Math.sin(angle) * 5, // 較強的放射狀初速度
                     isDragging: false, isFloating: true, 
-                    container: 'nucleus', isCounted: true 
+                    container: 'nucleus', isCounted: true,
+                    splitCooldown: Date.now() + 500 // 新增：500毫秒內禁止被自動判定靠近合併
                 };
                 
                 boardEntities.push(newEntity); 
-                bindDragS1(newEntity); // 重新綁定事件
+                bindDragS1(newEntity); 
             });
 
-            // 移除舊的群組 DOM
             groupEntity.el.remove(); 
             
-            // 如果拆開的是已經完成的「套」，必須扣回分數並取消通關倒數
+            // 扣除分數（因為已鎖定 isTransitioning，這裡扣除的一定是中途拼出的錯誤套）
             if (groupEntity.included.length === gameConfig.nValue) {
                 setsScore--;
                 document.querySelector('#score-sets span.num').innerText = setsScore;
-                if (stageTransitionTimeout) clearTimeout(stageTransitionTimeout);
             }
             
             showMessage('💥 染色體已拆解，請重新拼湊！', 2000);
@@ -556,13 +561,12 @@
             Draggable.create(entity.el, {
                 bounds: "#nucleus",
                 onPress: function(e) {
-                    // 加入雙擊判定
                     const now = Date.now();
                     const isDoubleClick = this.lastPressTime && (now - this.lastPressTime < 350);
                     this.lastPressTime = now;
 
-                    // 若為雙擊且目前在套階段且群組大於一，觸發拆解
-                    if (isDoubleClick && currentMode === 'sets' && entity.included.length > 1) {
+                    // 修改：如果正在倒數通關 (isTransitioning 為 true)，禁止拆解
+                    if (isDoubleClick && currentMode === 'sets' && entity.included.length > 1 && !isTransitioning) {
                         this.endDrag(e);
                         ungroupSetS1(entity);
                         return;
@@ -579,6 +583,10 @@
                     this.target.classList.remove('dragging'); 
                     gsap.to(this.target, { scale: 1, duration: 0.2 }); 
                     gsap.set(this.target, { zIndex: 50 });
+                    
+                    // 修改：如果剛被炸開還在冷卻時間內，強制放棄靠近判斷，避免瞬間黏回去
+                    if (entity.splitCooldown && Date.now() < entity.splitCooldown) return;
+
                     if (currentMode === 'singles') {
                         if (!entity.isCounted) {
                             entity.isCounted = true; entity.isFloating = false; this.target.classList.add('snapped'); 
@@ -662,19 +670,22 @@
                     setsScore++; document.querySelector('#score-sets span.num').innerText = setsScore;
                     showFloatingCombo('nucleus', avgX + newW/2 - 20, avgY - 40, '+1 套', '#3b82f6');
                     if(setsScore === gameConfig.ploidy) { 
+                        
+                        // 修改：達成通關條件時，鎖定遊戲不再允許拆解
+                        isTransitioning = true;
+                        
                         showMessage(`🏆 這隻牡蠣有${gameConfig.ploidy}套染色體`, 2500); 
                         
-                        // 修正：賦予至變數中，以防被拆開時可以取消倒數
                         if (gameConfig.mode === '3n12') {
-                            stageTransitionTimeout = setTimeout(() => {
+                            setTimeout(() => {
                                 showMessage('⚠️ 奇數套 (3n) 生物因為同源染色體無法平均分配，無法進行正常的減數分裂！', 5000);
-                                stageTransitionTimeout = setTimeout(() => {
+                                setTimeout(() => {
                                     document.getElementById('next-level-overlay').style.display = 'flex';
                                     gsap.fromTo('#next-level-overlay .menu-box', {scale: 0.5, opacity: 0}, {scale: 1, opacity: 1, duration: 0.8, ease: "back.out(1.2)"});
                                 }, 5500);
                             }, 2500);
                         } else {
-                            stageTransitionTimeout = setTimeout(transitionToStage2, 2500); 
+                            setTimeout(transitionToStage2, 2500); 
                         }
                     }
                 }
@@ -695,6 +706,7 @@
             boardEntities = [];
 
             singlesScore = 0; pairsScore = 0; setsScore = 0;
+            isTransitioning = false; // 修改：重新開始時，解鎖拆解功能
             document.querySelector('#score-singles span.num').innerText = 0;
             document.querySelector('#score-pairs span.num').innerText = 0;
             document.querySelector('#score-sets span.num').innerText = 0;
