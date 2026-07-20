@@ -341,6 +341,7 @@
         const NUCLEUS_RADIUS = 300; const MOTHER_RADIUS = 220; const TARGET_RADIUS = 160;  
         let boardEntities = []; let isPhysicsRunning = false;
         let messageTimeout;
+        let stageTransitionTimeout; // 新增：用於控制進關卡前的倒數計時，方便拆解時取消
 
         function showMessage(text, duration = 3000) {
             const msg = document.getElementById('center-message');
@@ -457,7 +458,8 @@
 
         function transitionToSets() {
             currentMode = 'sets'; setUIActiveS1('sets');
-            showMessage(`這隻果蠅有幾套染色體？<br><span style="font-size:1.1rem; color:#fde047;">(染色體靠近即可組裝成套)</span>`, 3000);
+            // 加入拆解機制的引導提示
+            showMessage(`這隻果蠅有幾套染色體？<br><span style="font-size:1.1rem; color:#fde047;">(靠近可組裝成套，拼錯可「雙擊」拆解重組)</span>`, 4000);
             const currentGroups = [...boardEntities]; boardEntities = []; 
             
             currentGroups.forEach(group => {
@@ -500,13 +502,83 @@
             });
         }
 
+        // 新增的拆解功能：把錯誤組裝的群組打散
+        function ungroupSetS1(groupEntity) {
+            const nucleus = document.getElementById('nucleus');
+            
+            // 從畫板實體清單中移除這個群組
+            boardEntities = boardEntities.filter(e => e.id !== groupEntity.id);
+
+            // 將群組內的染色體重新生成為獨立物件
+            groupEntity.included.forEach((item, idx) => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'drag-wrapper'; 
+                wrapper.style.width = '24px'; 
+                wrapper.style.height = item.h + 'px';
+                
+                item.layerEl.style.position = 'absolute';
+                item.layerEl.style.left = '0px'; 
+                item.layerEl.style.top = '0px';
+                wrapper.appendChild(item.layerEl);
+                nucleus.appendChild(wrapper);
+                
+                // 設定初始座標為原群組的位置附近
+                const startX = groupEntity.x + (idx * 30);
+                const startY = groupEntity.y + (groupEntity.h - item.h);
+                gsap.set(wrapper, { x: startX, y: startY });
+                
+                const newEntity = {
+                    el: wrapper, id: item.id, pair: item.pair, h: item.h,
+                    included: [item], x: startX, y: startY, w: 24, h: item.h,
+                    vx: (Math.random() - 0.5) * 2, vy: (Math.random() - 0.5) * 2, // 彈開效果
+                    isDragging: false, isFloating: true, 
+                    container: 'nucleus', isCounted: true 
+                };
+                
+                boardEntities.push(newEntity); 
+                bindDragS1(newEntity); // 重新綁定事件
+            });
+
+            // 移除舊的群組 DOM
+            groupEntity.el.remove(); 
+            
+            // 如果拆開的是已經完成的「套」，必須扣回分數並取消通關倒數
+            if (groupEntity.included.length === gameConfig.nValue) {
+                setsScore--;
+                document.querySelector('#score-sets span.num').innerText = setsScore;
+                if (stageTransitionTimeout) clearTimeout(stageTransitionTimeout);
+            }
+            
+            showMessage('💥 染色體已拆解，請重新拼湊！', 2000);
+        }
+
         function bindDragS1(entity) {
             Draggable.create(entity.el, {
                 bounds: "#nucleus",
-                onPress: function() { entity.isDragging = true; this.target.classList.add('dragging'); gsap.to(this.target, { scale: 1.1, duration: 0.2 }); gsap.set(this.target, { zIndex: 100000 }); },
+                onPress: function(e) {
+                    // 加入雙擊判定
+                    const now = Date.now();
+                    const isDoubleClick = this.lastPressTime && (now - this.lastPressTime < 350);
+                    this.lastPressTime = now;
+
+                    // 若為雙擊且目前在套階段且群組大於一，觸發拆解
+                    if (isDoubleClick && currentMode === 'sets' && entity.included.length > 1) {
+                        this.endDrag(e);
+                        ungroupSetS1(entity);
+                        return;
+                    }
+
+                    entity.isDragging = true; 
+                    this.target.classList.add('dragging'); 
+                    gsap.to(this.target, { scale: 1.1, duration: 0.2 }); 
+                    gsap.set(this.target, { zIndex: 100000 }); 
+                },
                 onDrag: function() { entity.x = this.x; entity.y = this.y; },
                 onRelease: function() {
-                    entity.isDragging = false; this.target.classList.remove('dragging'); gsap.to(this.target, { scale: 1, duration: 0.2 }); gsap.set(this.target, { zIndex: 50 });
+                    entity.isDragging = false; 
+                    this.target.classList.remove('dragging'); 
+                    gsap.to(this.target, { scale: 1, duration: 0.2 }); 
+                    gsap.set(this.target, { zIndex: 50 });
                     if (currentMode === 'singles') {
                         if (!entity.isCounted) {
                             entity.isCounted = true; entity.isFloating = false; this.target.classList.add('snapped'); 
@@ -592,16 +664,17 @@
                     if(setsScore === gameConfig.ploidy) { 
                         showMessage(`🏆 這隻牡蠣有${gameConfig.ploidy}套染色體`, 2500); 
                         
+                        // 修正：賦予至變數中，以防被拆開時可以取消倒數
                         if (gameConfig.mode === '3n12') {
-                            setTimeout(() => {
+                            stageTransitionTimeout = setTimeout(() => {
                                 showMessage('⚠️ 奇數套 (3n) 生物因為同源染色體無法平均分配，無法進行正常的減數分裂！', 5000);
-                                setTimeout(() => {
+                                stageTransitionTimeout = setTimeout(() => {
                                     document.getElementById('next-level-overlay').style.display = 'flex';
                                     gsap.fromTo('#next-level-overlay .menu-box', {scale: 0.5, opacity: 0}, {scale: 1, opacity: 1, duration: 0.8, ease: "back.out(1.2)"});
                                 }, 5500);
                             }, 2500);
                         } else {
-                            setTimeout(transitionToStage2, 2500); 
+                            stageTransitionTimeout = setTimeout(transitionToStage2, 2500); 
                         }
                     }
                 }
